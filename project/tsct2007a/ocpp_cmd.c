@@ -494,11 +494,13 @@ void MakeDataCmd_DataTransCp(TSCT_ERR_CODE code_no)
 
 				if(code_no == TSCT_ERR_CODE_BATDATA)
 				{
+					#if USE_OBD
 					TransUtc2Date(IdaKeriData[i].TimeStamp, tmpStrBuf);
 
 					orgBuf = idaVasRawData[i].data;
 
 					orgBytes = idaVasRawData[i].dataLenth;
+					#endif
 				}
 				else /*if(code_no == TSCT_ERR_CODE_SECCBATDATA)*/
 				{

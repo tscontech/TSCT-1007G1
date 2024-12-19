@@ -1,3 +1,5 @@
+#if USE_OBD
+
 /**
 *       @file
 *               tsctobd.h
@@ -67,3 +69,6 @@ uint8_t IdaKeriData_idx;
 
 #endif
 
+
+
+#endif

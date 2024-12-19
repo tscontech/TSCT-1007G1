@@ -1,4 +1,4 @@
-#if 0
+#if USE_OBD
 /**
 *       @file
 *               cstcardreader.c
