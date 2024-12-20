@@ -73,7 +73,8 @@ static void StopConnectSprite(void)
 static void TimeOutPageOut(void)
 {	
 	    ChannelType activeCh = CstGetUserActiveChannel();
-		ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));
+		ShowFatalErrorDialogBox(ERR_TIMEOUT);
+		// ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));  //Error dialog changes layer to main layer.
 }
 
 static void CPListenerOnConnect(int ch, unsigned char nAdcValue, CPVoltage voltage)

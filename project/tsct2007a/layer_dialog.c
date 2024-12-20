@@ -448,19 +448,19 @@ void ShowFatalErrorDialogBox(unsigned short Ecode)
 	if(Ecode == ERR_LEAK) {
 		sprintf(title_txt1, STR_TOUCHKEY_LEAK_DIALOG_1);
 		sprintf(title_txt2, STR_TOUCHKEY_LEAK_DIALOG_2);
-		OkDialogSetTitle(title, title_txt1, title_txt2);
-		OkDialogShow(false, 0);
-		DialogSetTimer(OKDIALOG_TIMEOUT);
-	}	else {
+	}
+	else if(ERR_TIMEOUT)
+	{
+		sprintf(title_txt1, STR_TIMEOUT_1);
+		sprintf(title_txt2, STR_TIMEOUT_2);
+	}
+	else {
 		sprintf(title_txt1, CONNECT_ERR_TXT1);
 		sprintf(title_txt2, CONNECT_ERR_TXT2);
-		OkDialogSetTitle(title, title_txt1, title_txt2);
-		OkDialogShow(false, 0);
-		DialogSetTimer(OKDIALOG_TIMEOUT);
 	}
-	// OkDialogSetTitle(title, title_txt1, title_txt2);
-	// OkDialogShow(false, 0);
-	// DialogSetTimer(OKDIALOG_TIMEOUT);
+	OkDialogSetTitle(title, title_txt1, title_txt2);
+	OkDialogShow(false, 0);
+	DialogSetTimer(OKDIALOG_TIMEOUT);
 	GotoStartLayer();
 	setPrivilegedTouchKeyListener(WhmErrorDialogTouchkeyListener);
 }
