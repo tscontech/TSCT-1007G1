@@ -42,6 +42,8 @@ static ITUSprite* sChargeSprite;
 //static ITUText* seffectiveCurrentText;
 static ITUIcon* sreadyTextIcon;
 static ITUIcon* schargingTextIcon;
+static ITUIcon* swaitTextIcon;
+static ITUIcon* sstopTextIcon;
 static ITUIcon* sreadyChgGageIcon;
 static ITUButton* sStopChargeButton;
 
@@ -547,6 +549,7 @@ void StopCharge(void)
 		//ituWidgetSetVisible(sReadyText, false);		
 		ituWidgetSetVisible(sreadyTextIcon, false);
 		ituWidgetSetVisible(sreadyChgGageIcon, false);
+		ituWidgetSetVisible(swaitTextIcon, false);
 		//ituWidgetSetVisible(schargingTextIcon, true);		
 	}	
 	ituSpriteGoto(sChargeSprite, 0);
@@ -569,7 +572,8 @@ static void UpdateStartGui()
 	if(!sStopChargeButtonbool)
 	{
 		sStopChargeButtonbool = true;
-		ituWidgetSetVisible(sStopChargeButton, true);			
+		// ituWidgetSetVisible(sStopChargeButton, true);			
+		ituWidgetSetVisible(sstopTextIcon, true);
 	}		
 
 }
@@ -586,7 +590,8 @@ void UpdateStopGui()
 	if(sStopChargeButtonbool)
 	{
 		sStopChargeButtonbool = false;
-		ituWidgetSetVisible(sStopChargeButton, false);			
+		// ituWidgetSetVisible(sStopChargeButton, false);			
+		ituWidgetSetVisible(sstopTextIcon, false);
 	}		
 
 	//ituTextSetString(sEffectiveCurrentText1, "0.0 A");
@@ -791,6 +796,8 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 		schargingTextIcon = ituSceneFindWidget(&theScene, "chargingTextIcon");
 		sreadyTextIcon = ituSceneFindWidget(&theScene, "readyTextIcon");
 		sreadyChgGageIcon = ituSceneFindWidget(&theScene, "readyChgGageIcon");
+		swaitTextIcon = ituSceneFindWidget(&theScene, "waitTextIcon");
+		sstopTextIcon = ituSceneFindWidget(&theScene, "stopTextIcon");
 
 		sEffectiveCurrentText = ituSceneFindWidget(&theScene, "effectiveCurrentText");
 		assert(sEffectiveCurrentText);					
@@ -853,7 +860,8 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 	if(!sStopChargeButtonbool)
 	{
 		sStopChargeButtonbool = true;
-		ituWidgetSetVisible(sStopChargeButton, true);			
+		// ituWidgetSetVisible(sStopChargeButton, true);			
+		ituWidgetSetVisible(sstopTextIcon, true);
 	}		
 	// if(!sReadyTextbool)
 	// {
@@ -870,8 +878,10 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 		// sReadyTextbool = false;
 		//ituWidgetSetVisible(sReadyText, false);
 		ituWidgetSetVisible(sreadyTextIcon, false);
+		ituWidgetSetVisible(swaitTextIcon, false);
 		ituWidgetSetVisible(sreadyChgGageIcon, false);
 		ituWidgetSetVisible(schargingTextIcon, true);
+		ituWidgetSetVisible(sstopTextIcon, true);
 		ituWidgetSetVisible(sEffectiveCurrentText, true);				
 	// }	
 	ituSpritePlay(sChargeSprite, CH1);	

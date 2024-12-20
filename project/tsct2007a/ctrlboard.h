@@ -331,7 +331,7 @@ typedef enum{
 #define ERR_RFID                    (63)
 #define ERR_AMI                     (64)
 #define ERR_LEAK                    (13)
-#define ERR_OVER_CURRENT            (13)
+#define ERR_TIMEOUT                 (10)
 
 /* v1.4.0
 #define ERR_SERVER_DISCON           (0)     // Server Disconnect 

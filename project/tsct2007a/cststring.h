@@ -46,6 +46,9 @@
 #define STR_TOUCHKEY_LEAK_DIALOG_1      "누전 발생"
 #define STR_TOUCHKEY_LEAK_DIALOG_2      "관리자에게 문의해주세요."
 
+#define STR_TIMEOUT_1                   "시간 초과"
+#define STR_TIMEOUT_2                   "처음부터 다시 시도해주세요."
+
 #define STR_EMERGENCY_DIALOG_11			"비상버튼을 오른쪽으로 돌려"
 #define STR_EMERGENCY_DIALOG_12			"해제하고 커버를 닫아주세요."
 #define STR_BLANK_STRING				""

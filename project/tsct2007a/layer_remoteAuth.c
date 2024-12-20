@@ -92,11 +92,11 @@ static void* sWaitQRMonitoringTaskFuntion(void* arg)
 
 void QRGotoSatartLayer(void)
 {
-    /*
-	QR_Cancel_Code = QR_CANCLE_TIMEOUT;
-	GotoStartLayer();*/
+    
+	// QR_Cancel_Code = QR_CANCLE_TIMEOUT;
+	GotoStartLayer();
 	//OkDialogSetOkListener(GotoStartLayer);
-	//ShowWhmErrorDialogBox(PAY_ERR);
+	// ShowWhmErrorDialogBox(PAY_ERR);  //If q1 sent, Error message must pop up.
 }
 
 static void QRStopOnDialog(void)
@@ -183,8 +183,8 @@ bool remoteOnEnter(ITUWidget* widget, char* param)
 		pthread_detach(sWaitQRMonitoringTask);
 	}	
 
-    TopSetTimer(REMOTE_TIMEOUT, QRGotoSatartLayer);
 */
+    TopSetTimer(REMOTE_TIMEOUT, QRGotoSatartLayer);
 
     setTouchKeyListener(touchkeyQRPressed);
 
