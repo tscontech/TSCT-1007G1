@@ -61,8 +61,9 @@ static void CPListenerOnFinish(int ch, unsigned char nAdcValue, CPVoltage voltag
 	switch(sVoltage)
 	{
 		case CP_VOLTAGE_12V:
-			sleep(2);			// for Send CP finish status when disconnect cable
-			GotoStartLayer();	
+			// Must wait until user knows
+			// sleep(2);			// for Send CP finish status when disconnect cable
+			// GotoStartLayer();	
 			break;
 			
 		case CP_VOLTAGE_9V:
