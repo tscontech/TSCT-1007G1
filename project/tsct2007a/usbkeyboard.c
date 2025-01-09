@@ -122,6 +122,11 @@ static void usbKeyboardTask(void* arg)
 
     while(keyboardTask)
     {
+        if(hookedFunction == dummyHooker)
+        {
+            sleep(5);
+            continue;
+        }
         if(read(ITP_DEVICE_USBKBD, &ev, sizeof(ITPKeyboardEvent)) == sizeof(ITPKeyboardEvent))
         {  
             printf("[USBKeyboard] flag : %d, code : %d\n", ev.flags, ev.code);

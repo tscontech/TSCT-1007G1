@@ -40,8 +40,10 @@
 //-----------------------------------------------------------------------
 // MACRO
 //-----------------------------------------------------------------------
-#define SECC_READ_232_TASK_DELAY		25 // ms
-#define SECC_READ_ID_TASK_DELAY		50 // ms
+// #define SECC_READ_232_TASK_DELAY		25 // ms
+// #define SECC_READ_ID_TASK_DELAY		50 // ms
+#define SECC_READ_TASK_DELAY			15 // ms
+#define SECC_REQ_TASK_DELAY				15 // ms
 
 #define CHRG_ID			0x01
 #define CAN_ADDR_MAX 	30030
@@ -50,6 +52,7 @@
 #define FC_WRITE		0x10
 
 #define MAX_LEN			90
+#define SECC_MODE		SECC_MODE_NOMINAL
 
 //-----------------------------------------------------------------------
 // Local Variable
@@ -114,7 +117,8 @@ static uint8_t MakeWriteTx(uint16_t Addr16, uint16_t AddrLen16)
 	SeccModbusWriteTx.Datalen = (uint8_t)(2 * AddrLen16);
 
 	memcpy(crc_tmp16, &(SeccModbusWriteTx.Id01), 7);
-	memcpy(&crc_tmp16[7], SeccModbusWriteTx.Data16, SeccModbusWriteTx.Datalen);
+	// memcpy(&crc_tmp16[7], SeccModbusWriteTx.Data16, SeccModbusWriteTx.Datalen);
+	memcpy(crc_tmp16 + 7, SeccModbusWriteTx.Data16, SeccModbusWriteTx.Datalen);
 
 	SeccModbusWriteTx.Crc16 = Led2Bed16(TsctCrc16(crc_tmp16, 7 + SeccModbusWriteTx.Datalen));
 
@@ -159,7 +163,7 @@ static uint8_t SendChrgPrm(void)
 	SeccModbusWriteTx.Data16[2] = Led2Bed16(SeccTxData.NormFreq);
 	SeccModbusWriteTx.Data16[3] = Led2Bed16(SeccTxData.MaxPower);
 
-	sleep(1);
+	// sleep(1);
 
 	return MakeWriteTx(40027, 4);
 }
@@ -203,10 +207,17 @@ uint8_t InitSecc(void)
 
 		case SECC_INIT_STEP_CHRGPRM :
 			if(SendChkFlg) {
-				// SeccModbusWriteTx.Data16[0] = Led2Bed16(0);	// ISO15118
-				// SeccModbusWriteTx.Data16[0] = Led2Bed16(64);	// 61851 Only
-				// SeccModbusWriteTx.Data16[0] = Led2Bed16(128);	// ISO15118 with 61851 AC Fail
-				SeccModbusWriteTx.Data16[0] = Led2Bed16(192);	// ISO15118 with 61851 AC Fail
+				#if SECC_MODE == SECC_MODE_15118_ONLY
+				SeccModbusWriteTx.Data16[0] = Led2Bed16(0);	// ISO15118
+				#elif SECC_MODE == SECC_MODE_61851_ONLY
+				SeccModbusWriteTx.Data16[0] = Led2Bed16(64);	// 61851 Only
+				#elif SECC_MODE == SECC_MODE_FALLBACK
+				SeccModbusWriteTx.Data16[0] = Led2Bed16(128);	// ISO15118 with 61851 AC Fail
+				#elif SECC_MODE == SECC_MODE_NOMINAL
+				SeccModbusWriteTx.Data16[0] = Led2Bed16(192);	// ISO15118 with 61851 AC Nominal
+				#else
+					#error NO SECC MODE SELECTED!!!
+				#endif
 
 				return MakeWriteTx(40006, 1);			
 			}
@@ -492,25 +503,28 @@ uint8_t ChrgSecc(void)
 				// charging Finish
 				if((SeccRxData.stcode >= CSM_STAT_STOPCHRG) /*&& (SeccRxData.pwmvoltage >= 80 && SeccRxData.pwmvoltage <= 100)*/){
 					// SeccChrgStep = SECC_CHRG_STEP_NONE;
+					MagneticContactorOff(); //ADSADASDADSDADASD
 					vasReadCd = false;
 				}
 				// Charging~~
 				else {
 					// period Count
-					if((charge_cnt++ > 20))			// per 1s
-					{
-						charge_cnt = 0;
-					}
+					// if((charge_cnt++ > 20))			// per 1s
+					// {
+					// 	charge_cnt = 0;
+					// }
 
 					if(vasReadCd) {
 						return ReadVasData();
 					}
 
-					if(charge_cnt%10 == 0) {		// per 500ms
+					// if(charge_cnt%10 == 0) {		// per 500ms
+					if(charge_cnt & 0x1F == 31){
 						return ChkVasData();
 					}
 					
-					else if(charge_cnt%10 == 5)		// per 500ms
+					// else if(charge_cnt%10 == 5)		// per 500ms
+					else if(charge_cnt & 0x1F == 16)
 					{
 						return SendChrgPrm();
 					}
@@ -549,10 +563,10 @@ uint8_t SeccSenario(void)
 
 	else reinitCnt = 0;
 
-	if(SeccInitStep < SECC_INIT_STEP_DONE) {
+	// if(SeccInitStep < SECC_INIT_STEP_DONE) {
 
-		return InitSecc();
-	}
+	// 	return InitSecc();
+	// }
 
 	if(SeccTxData.status_fault & (1<<SECC_STAT_CHARG))
 	{
@@ -575,24 +589,35 @@ static void* SeccRS232ReqTask(void* arg)
 	uint8_t ret_8 = 0;
 	int ret = 0;
 
-	uint8_t seccReqStep = 0;;
+	uint8_t seccReqStep = 0;
 
 	SECC_MODBUS_READ_TX_S tmp_rd;
 
 	SECC_MODBUS_WRITE_TX_S tmp_wr;
 
+	// struct timeval newTime;
+
 	// DumpBuffer("Reqeust to PLC Modem", request, 8);
 	
-	usleep(10*1000*1000);
+	// usleep(10*1000*1000);
 
 	while (1)
 	{
+		// write(SECC_DEV, "Something Wrote!\r\n", 19);
+		// usleep(SECC_REQ_TASK_DELAY * 1000);
+		// continue;
+
+		// gettimeofday(&newTime, NULL);
+		// printf("[SeccRS232ReqTask]tv_sec : %d, tv_usec : %d\n", newTime.tv_sec, newTime.tv_usec);
+
+
 		// init
 		size = 0;
 		ret = 0;
 
 		// validate proc
-		if(PlcRespWaitCnt){
+		if(PlcRespWaitCnt > 0){ 
+
 			if(++PlcRespWaitCnt > 10) {
 
 				if(ret_8 == 1)
@@ -607,43 +632,58 @@ static void* SeccRS232ReqTask(void* arg)
 
 				PlcRespWaitCnt = 0;
 			}
-			usleep(SECC_READ_ID_TASK_DELAY * 1000);
+			usleep(SECC_REQ_TASK_DELAY * 1000);
 			continue;
 		}
 
+		// if(PlcRespWaitCnt != 0){
+		// 	usleep(SECC_REQ_TASK_DELAY * 100);
+		// 	continue;
+		// }
+
+		// create request Data
 		if(SeccInitStep < SECC_INIT_STEP_DONE) {
 
 			ret_8 = InitSecc();
 		}
-
 		else
 		{
+			// seccReqStep++;
+
+			// if(seccReqStep > 2) seccReqStep = 0;
+
+			// switch(seccReqStep)
+			// {
+			// 	case 0:
+			// 		printf("\r\n\r\nseccReqStep = 0  ChckSeccStat\r\n\r\n");
+			// 		ret_8 = ChckSeccStat();
+			// 	break;
+
+			// 	case 1:
+			// 		// printf("\r\n\r\nseccReqStep = 1  SendChrgReady\r\n\r\n");
+			// 		ret_8 = SendChrgReady();
+			// 	break;
+
+			// 	case 2:
+			// 		// printf("\r\n\r\nseccReqStep = 2  SeccSenario\r\n\r\n");
+			// 		// seccReqStep = 0;
+			// 		ret_8 = SeccSenario();
+			// 	break;
+			// 	default:
+			// 		// printf("\r\n\r\nseccReqStep = default  ChckSeccStat\r\n\r\n");
+			// 		seccReqStep = 0;
+			// 		ret_8 = ChckSeccStat();
+			// 	break;
+			// }
+
 			seccReqStep++;
 
-			if(seccReqStep > 2) seccReqStep = 0;
-
-			switch(seccReqStep)
-			{
-				case 0:
-					printf("\r\n\r\ncheck cp status\r\n\r\n");
-					ret_8 = ChckSeccStat();
-				break;
-
-				case 1:
-					ret_8 = SendChrgReady();
-				break;
-
-				case 2:
-					seccReqStep = 0;
-					ret_8 = SeccSenario();
-				break;
-				default:
-					seccReqStep = 0;
-					ret_8 = ChckSeccStat();
-				break;
-			}
+			ret_8 = ( seccReqStep & 1 ) ? SeccSenario() : SendChrgReady();
 		}
 
+
+
+		// send request
 
 		if(ret_8) 
 		{
@@ -671,7 +711,7 @@ static void* SeccRS232ReqTask(void* arg)
 
 				// 	SeccModbusReadTx.ReqAddrLen = Led2Bed16( Led2Bed16(tmp_rd.ReqAddrLen) - MAX_LEN );
 
-				// 	usleep(SECC_READ_ID_TASK_DELAY * 1000);
+				// 	usleep(SECC_REQ_TASK_DELAY * 1000);
 				// }
 
 				// if(Led2Bed16(SeccModbusReadTx.ReqAddrLen) > 0) {
@@ -683,6 +723,7 @@ static void* SeccRS232ReqTask(void* arg)
 
 				memcpy(request, &SeccModbusReadTx.Id01, 8);
 				write(SECC_DEV, request, 8);
+				
 
 				if(Led2Bed16(SeccModbusReadTx.ReqAddr) == 30061)
 						DumpBuffer("PLC Modem Reqeust", request, 8);
@@ -705,7 +746,7 @@ static void* SeccRS232ReqTask(void* arg)
 		// printf("\r\n[%d]\r\n", ret);
 
 		// if(rebootCnt < 50)	
-		// 	usleep(SECC_READ_ID_TASK_DELAY * 1000);
+		// 	usleep(SECC_REQ_TASK_DELAY * 1000);
 		// else
 		// {
 		// 	rebootCnt = 0;
@@ -727,7 +768,9 @@ static void* SeccRS232ReqTask(void* arg)
 		// 	ControlPilotEnablePower(0);
 		// 	sleep(30);
 		// }
-		usleep(SECC_READ_ID_TASK_DELAY * 1000);
+
+		// range : 25ms ~ 33ms
+		usleep(SECC_REQ_TASK_DELAY * 1000);
 	}
 }
 
@@ -739,8 +782,9 @@ bool ValidSecc(char* rx_Src, char* Src, uint16_t size)
 	// DumpBuffer("Reqeust from PLC Modem", Src, size);
 
 	if(!dataContinSize) {
-		memset(Src, 0, 512);
+		// memset(Src, 0, 512);
 		memcpy(Src, rx_Src, size);
+		Src[size] = 0;
 
 		// size가 Data Lenth address 보다 작거나, Data Lenth Value 보다 작을 때 다음 값 까지 확인
 		if(size < 2) {
@@ -794,34 +838,46 @@ bool ValidSecc(char* rx_Src, char* Src, uint16_t size)
 			return false;
 		}
 
-		memcpy(&(Src[dataContinSize]), rx_Src, size);
+		// memcpy(&(Src[dataContinSize]), rx_Src, size);
+		memcpy(Src + dataContinSize, rx_Src, size);
 		size += dataContinSize;
+		Src[size] = 0;
 		dataContinSize = 0;
 
 		// size가 Data Lenth address 보다 작거나, Data Lenth Value 보다 작을 때 다음 값 까지 확인
 		if(Src[1] == FC_READ) {
-			if((uint8_t)Src[2] > size-5) {
-				DumpBuffer("Reqeust from PLC Modem", Src, size);
-				CtLogRed("PLC Msg Error : Fault Lenth\r\n");
-				return false;
-			}
-			else if((uint8_t)Src[2] < size-5) {
+			// if((uint8_t)Src[2] > size-5) {
+			// 	DumpBuffer("Reqeust from PLC Modem", Src, size);
+			// 	CtLogRed("PLC Msg Error : Fault Lenth\r\n");
+			// 	return false;
+			// }
+			// else if((uint8_t)Src[2] < size-5) {
+			// 	DumpBuffer("Reqeust from PLC Modem", Src, size);
+			// 	CtLogRed("PLC Msg Error : Fault Lenth\r\n");
+			// 	return false;
+			// }
+			if((uint8_t)Src[2] != size-5) {
 				DumpBuffer("Reqeust from PLC Modem", Src, size);
 				CtLogRed("PLC Msg Error : Fault Lenth\r\n");
 				return false;
 			}
 		}
 		else if(Src[1] == FC_WRITE) {
-			if(8 > size) {
+			// if(8 > size) {
+			// 	DumpBuffer("Reqeust from PLC Modem", Src, size);
+			// 	CtLogRed("PLC Msg Error : Fault Lenth\r\n");
+			// 	return false;
+			// }
+			// else if(8 < size) {
+			// 	DumpBuffer("Reqeust from PLC Modem", Src, size);
+			// 	CtLogRed("PLC Msg Error : Fault Lenth\r\n");
+			// 	return false;
+			// }			
+			if(8 != size) {
 				DumpBuffer("Reqeust from PLC Modem", Src, size);
 				CtLogRed("PLC Msg Error : Fault Lenth\r\n");
 				return false;
 			}
-			else if(8 < size) {
-				DumpBuffer("Reqeust from PLC Modem", Src, size);
-				CtLogRed("PLC Msg Error : Fault Lenth\r\n");
-				return false;
-			}			
 		}
 		else {
 			DumpBuffer("Reqeust from PLC Modem", Src, size);
@@ -937,8 +993,10 @@ bool vasParsFunc(SECC_VAS_READ_DATA* des, uint16_t *buf, uint16_t* src, uint8_t 
 	// }
 
 	for(int i=0; i<size; i+=2) {
-		memcpy(&buf8[ MAX_LEN * (vasReadCd-1) * 2 + i ], &src8[i+1], 1);
-		memcpy(&buf8[ MAX_LEN * (vasReadCd-1) * 2 + i + 1 ], &src8[i], 1);
+		// memcpy(&buf8[ MAX_LEN * (vasReadCd-1) * 2 + i ], &src8[i+1], 1);
+		// memcpy(&buf8[ MAX_LEN * (vasReadCd-1) * 2 + i + 1 ], &src8[i], 1);
+		memcpy(buf8 + MAX_LEN * (vasReadCd-1) * 2 + i , src8 + i+1, 1);
+		memcpy(buf8 + MAX_LEN * (vasReadCd-1) * 2 + i + 1 , src8 + i, 1);
 	} 
 
 	if(tmp32 > MAX_LEN) {
@@ -1032,7 +1090,8 @@ bool vasParsFunc(SECC_VAS_READ_DATA* des, uint16_t *buf, uint16_t* src, uint8_t 
 
 	seccVasRawData[seccVasDataCnt].dataLenth = (SeccRxData.vasMapCnt - 10) * 2 - 6;
 
-	memcpy(seccVasRawData[seccVasDataCnt].data, &buf8[6], seccVasRawData[seccVasDataCnt].dataLenth);
+	// memcpy(seccVasRawData[seccVasDataCnt].data, &buf8[6], seccVasRawData[seccVasDataCnt].dataLenth);
+	memcpy(seccVasRawData[seccVasDataCnt].data, buf8 + 6, seccVasRawData[seccVasDataCnt].dataLenth);
 
 	CtLogGreen("[VAS] Parsing Success [%d]", seccVasDataCnt);
 
@@ -1069,13 +1128,13 @@ void ParsRxData(void)
 		if(tmp <= 0)	break;
 
 		case 30004:
-			SeccRxData.swVer = Led2Bed16(SeccModbusReadRx.Data16[(SeccModbusReadRx.DataLen - tmp)/2]);
+			// SeccRxData.swVer = Led2Bed16(SeccModbusReadRx.Data16[(SeccModbusReadRx.DataLen - tmp)/2]);
 			// printf("SeccRxData.swVer : %d\r\n", SeccRxData.swVer);
 			tmp -= 2;
 		if(tmp <= 0)	break;		
 
 		case 30005:
-			SeccRxData.chrgPrtcl = Led2Bed16(SeccModbusReadRx.Data16[(SeccModbusReadRx.DataLen - tmp)/2]);
+			// SeccRxData.chrgPrtcl = Led2Bed16(SeccModbusReadRx.Data16[(SeccModbusReadRx.DataLen - tmp)/2]);
 			// printf("SeccRxData.chrgPrtcl : %d\r\n", SeccRxData.chrgPrtcl);
 			tmp -= 2;
 		if(tmp <= 0)	break;		
@@ -1089,6 +1148,28 @@ void ParsRxData(void)
 		case 30007:
 			SeccRxData.pwmvoltage = Led2Bed16(SeccModbusReadRx.Data16[(SeccModbusReadRx.DataLen - tmp)/2]);
 			// printf("SeccRxData.pwmvoltage : %d\r\n", SeccRxData.pwmvoltage);
+			if( ( SeccRxData.pwmvoltage > 70 || SeccRxData.pwmvoltage < 50 ))
+			{
+				MagneticContactorOff();
+			}
+			else
+			{
+				MagneticContactorOn();
+			}
+			/*
+			if(SeccRxData.pwmvoltage >= 110 && SeccRxData.pwmvoltage <= 130)  //SADASDSADASDADADDASDASDASDASD
+				// return CP_VOLTAGE_12V;	
+				MagneticContactorOff();
+			else if(SeccRxData.pwmvoltage >= 80 && SeccRxData.pwmvoltage <= 100)
+				// return CP_VOLTAGE_9V;
+				MagneticContactorOff();
+			else if(SeccRxData.pwmvoltage >= 50 && SeccRxData.pwmvoltage <= 70)
+				// return CP_VOLTAGE_6V;
+				{;}
+			else if(SeccRxData.pwmvoltage >= 0 && SeccRxData.pwmvoltage <= 20)
+				// return CP_VOLTAGE_12V;	
+				MagneticContactorOff();
+				*/
 			tmp -= 2;
 		if(tmp <= 0)	break;
 
@@ -1193,23 +1274,32 @@ void ParsRxData(void)
 
 static void* SeccRS232ReadTask(void* arg)
 {
-	char pars_buf[512];
+	char pars_buf[512] = {};
+	int bufsize = 0;
+	char buffer[512] = {};
+	bool ret_b = false;
+	// struct timeval newTime;
 
-	usleep(5*1000*1000);
+	// usleep(5*1000*1000);
 
     while(sReadPlcTask)
     {
-		char buffer[512];
-		bool ret_b = false;
-
-		memset(buffer, 0, 512);
+		// gettimeofday(&newTime, NULL);
+		// printf("[SeccRS232ReadTask]tv_sec : %d, tv_usec : %d\n", newTime.tv_sec, newTime.tv_usec);
+		ret_b = false;
+		memset(buffer, 0, bufsize);
 		int bufsize = read(SECC_DEV, buffer, 512);
+
+		// DumpBuffer("Check Rx Data", buffer, bufsize);
+		// usleep(SECC_READ_TASK_DELAY * 1000);
+		// continue;
 
 		if(bufsize) {
 
 			// DumpBuffer("Check Rx Data", buffer, bufsize);
 
 			ret_b = ValidSecc(buffer, pars_buf, bufsize);
+			// memcpy(pars_buf, buffer, bufsize);
 
 			if(ret_b){
 				// DumpBuffer("Rx Data", pars_buf, )
@@ -1221,19 +1311,21 @@ static void* SeccRS232ReadTask(void* arg)
 					// 	DumpBuffer("Check Vas Rx Data", pars_buf, SeccModbusReadRx.DataLen + 5);
 					// }
 
-					memset(SeccModbusReadRx.Data16, 0, sizeof(SeccModbusReadRx.Data16));
-					memcpy(SeccModbusReadRx.Data16, &(pars_buf[3]), SeccModbusReadRx.DataLen);
+					// memset(SeccModbusReadRx.Data16, 0, sizeof(SeccModbusReadRx.Data16));
+					// memcpy(SeccModbusReadRx.Data16, &(pars_buf[3]), SeccModbusReadRx.DataLen);
+					memcpy(SeccModbusReadRx.Data16, pars_buf + 3, SeccModbusReadRx.DataLen);
+					SeccModbusReadRx.Data16[SeccModbusReadRx.DataLen] = 0;
 
 					ParsRxData();
 				}
 
 				if(pars_buf[1] == FC_WRITE){
 					// DumpBuffer("Check Rx Data", pars_buf, bufsize);
-
-					if(SendChkFlg) {
-						SendChkFlg = false;
+					SendChkFlg = false;
+					// if(SendChkFlg) {
+					// 	SendChkFlg = false;
 						// DumpBuffer("Secc Write Response", pars_buf, bufsize);
-					}	
+					// }	
 				}
 
 				
@@ -1245,7 +1337,7 @@ static void* SeccRS232ReadTask(void* arg)
 		}
 
 
-        usleep(SECC_READ_232_TASK_DELAY * 1000);
+        usleep(SECC_READ_TASK_DELAY * 1000);
 	}
 		
 	sReadPlcTask = 0;
@@ -1257,7 +1349,7 @@ void SeccInit(void)
 	ithGpioSetMode(GPIO_PLC_PWR_RELAY_CTL, ITH_GPIO_MODE0);
 	ithGpioSetOut(GPIO_PLC_PWR_RELAY_CTL);
 	ithGpioClear(GPIO_PLC_PWR_RELAY_CTL);	
-	usleep(3*1000*1000);
+	sleep(3);
 	ithGpioSet(GPIO_PLC_PWR_RELAY_CTL);	
 
 	CtLogYellow("[Secc] PLC Relay On\n");
@@ -1273,6 +1365,8 @@ void SeccInit(void)
 	SeccRxData.stcode = CSM_STAT_READY;
 	SeccRxData.secc_errcode = 0xffff;
 	
+	// wait booting 
+	sleep(10);
 
 	if (sReadPlcTask==0)
 	{

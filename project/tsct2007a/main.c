@@ -134,13 +134,13 @@ int SDL_main(int argc, char *argv[]){
 
     THInit();
 
-    OderSequenceInit(); printf("\n-----OderSequenceInit-----\n ");
+    // OderSequenceInit(); printf("\n-----OderSequenceInit-----\n ");
 
     SeccInit();
 
     BL0939Init();
 
-    FaultManageInit();  printf("-----FaultManageInit-----\n ");
+    // FaultManageInit();  printf("-----FaultManageInit-----\n ");
     LEDOn();
 
     CtLogMagenta("[SDL_main] SceneInit \r\n");

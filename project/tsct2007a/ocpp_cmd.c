@@ -100,7 +100,8 @@ void GetDateTime(unsigned char* buf)
 
 	//printf(" 7>> %04d-%02d-%02d:%02d.%02d.%02d \n", tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 	
-	sprintf(buf, "%d-%02d-%02dT%02d:%02d:%02d.000Z", tm->tm_year+1900, tm->tm_mon, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec );
+	// tm_mon은 1-12가 아닌 0-11
+	sprintf(buf, "%d-%02d-%02dT%02d:%02d:%02d.000Z", tm->tm_year+1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec );
 
 	// for( n=0; n<14; n+=2)
 	// {

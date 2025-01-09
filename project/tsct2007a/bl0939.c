@@ -501,7 +501,7 @@ bool easyReadData(uint8_t regAddr, uint32_t* readData, uint32_t expected)
     printf("[BL0939] %2X => %2X %2X %2X %2X, %d\n", regAddr, data[0], data[1], data[2], data[3], *(uint32_t*)data & 0x00FFFFFF);
 
     if(readData)
-        readData = *(uint32_t*)data;
+        *readData = *(uint32_t*)data;
 
     if(expected)
         return testData(expected, data);
@@ -662,7 +662,8 @@ void BLLeakTask()
             }
         }
 
-        usleep(1000);
+        // usleep(1000);
+        sleep(5);
     }
 
 }

@@ -39,12 +39,23 @@ void SetHomeLayer(bool bset)
 
 void touchkeyHomePressed(bool longPush)
 {
-
+	// static bool sPLCOn = true;
 	// if(CstGetMcstatus())
 	// 	MagneticContactorOff();
 	// else 
 	// 	MagneticContactorOn();
 	GotoNextAuthLayer(AUTH_WAIT_LAYER);
+
+	// if(sPLCOn == false)
+	// {
+	// 	sPLCOn = true;
+	// 	ithGpioSet(GPIO_PLC_PWR_RELAY_CTL);	
+	// }
+	// else
+	// {
+	// 	sPLCOn = false;
+	// 	ithGpioClear(GPIO_PLC_PWR_RELAY_CTL);	
+	// }
 
 	//powerControlPLC(longPush);
 
@@ -201,8 +212,7 @@ bool MainOnEnter(ITUWidget* widget, char* param)
 
 	StopCharge2ch(CH1);
 
-	// LEDOff();
-	LEDOn();
+	LEDOff();
 	ChagerInitStatus(CH1);			
 	ChagerInitStatus(CH2);
 	shmDataAppInfo.app_order = APP_ORDER_WAIT;

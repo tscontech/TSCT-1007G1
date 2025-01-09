@@ -218,4 +218,10 @@ typedef enum{
 SECC_CHRG_STEP SeccChrgStep;
 // SECC_CHRG_STEP SeccChrgStep = SECC_CHRG_STEP_NONE;
 
+#define SECC_MODE_15118_ONLY            0
+#define SECC_MODE_61851_ONLY            1
+#define SECC_MODE_FALLBACK              2
+#define SECC_MODE_NOMINAL               3
+
+
 #endif

@@ -23,7 +23,8 @@ extern "C" {
 
 #define MAX_ADDRESS     70
 
-//#define USE_SECC 1
+// #define USE_SECC 1
+// #define USE_OBD 0
 
 /** @defgroup ctrlboard_audio Audio Player
  *  @{
@@ -185,6 +186,8 @@ typedef struct {
 	int devtype;                                                  ///< Type	
 	int ConfirmSelect;													//  인증방법
 	int chargingstatus;					// Connector Availablity -> bit 0~7 : connector Id 0~7
+    int maxPower;                       //Max Charging Power (KW)  JGELL 25.01.06
+    bool forcePowerLimit;                     //Active limitation of power  JGELL 25.01.06
 
     int OperationMode;
     int FreeChargingTime;

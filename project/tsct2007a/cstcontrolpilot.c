@@ -289,14 +289,14 @@ void ControlPilotInit(void){
 	#endif
 
 	//24.11.08 1007G1 CP용 GPIO 설정- JGLEE
-	ithGpioSetMode(GPIO_CP_RL0, ITH_GPIO_MODE0);
-	ithGpioSetOut(GPIO_CP_RL0);
-	ithGpioSetMode(GPIO_CP_RL1, ITH_GPIO_MODE0);
-	ithGpioSetOut(GPIO_CP_RL1);
-	ithGpioSetMode(GPIO_CP_RL3, ITH_GPIO_MODE0);
-	ithGpioSetOut(GPIO_CP_RL3);
-	ithGpioSetMode(GPIO_CP_RL4, ITH_GPIO_MODE0);
-	ithGpioSetOut(GPIO_CP_RL4);
+	// ithGpioSetMode(GPIO_CP_RL0, ITH_GPIO_MODE0);
+	// ithGpioSetOut(GPIO_CP_RL0);
+	// ithGpioSetMode(GPIO_CP_RL1, ITH_GPIO_MODE0);
+	// ithGpioSetOut(GPIO_CP_RL1);
+	// ithGpioSetMode(GPIO_CP_RL3, ITH_GPIO_MODE0);
+	// ithGpioSetOut(GPIO_CP_RL3);
+	// ithGpioSetMode(GPIO_CP_RL4, ITH_GPIO_MODE0);
+	// ithGpioSetOut(GPIO_CP_RL4);
 
 
 	if (sCh1CPMonTask == 0)		{
