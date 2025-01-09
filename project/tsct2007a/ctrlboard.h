@@ -23,7 +23,7 @@ extern "C" {
 
 #define MAX_ADDRESS     70
 
-//#define USE_SECC 1
+#define USE_SECC 1
 
 /** @defgroup ctrlboard_audio Audio Player
  *  @{
