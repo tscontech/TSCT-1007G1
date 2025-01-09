@@ -39,6 +39,7 @@ char* command, *data;  //명령과 데이터로 나누었을 때 각각의 문�
 
 ITUTextBox* focusedTextBox;
 ITUTextBox* resultTextBox;
+ITUBackground* sColorTestBackground;
 
 extern char* resultBuffer;
 extern const size_t resultBufferSize;
@@ -58,10 +59,11 @@ void clearInputBuffer()
         ituTextBoxSetString(focusedTextBox, inputBuffer);
 }
 
-void bindTextBox(ITUTextBox* input, ITUTextBox* result)
+void bindTextBox(ITUTextBox* input, ITUTextBox* result, ITUBackground* background)
 {
     focusedTextBox = input;
     resultTextBox = result;
+    sColorTestBackground = background;
     clearInputBuffer();
     resultLine = 0;
 }
@@ -77,7 +79,40 @@ void updateResultBox(const char* newText)
     ituTextBoxSetString(resultTextBox, resultBuffer);
 }
 
-/* ----------------------Data Vaildation Functions(Optional)-------------------------*/
+/* ---------------------------------------------------------------------------------- */
+/* ----------------------Data Convert Functions(Optional)------------------------- */
+/* ---------------------------------------------------------------------------------- */
+const int convertToBool(const char* newBool)
+{
+    char* buffer[11] = {};
+    strncpy(buffer, newBool, 10);
+
+
+    for(int i = 0; i < 10; ++i)
+    {
+        if(isalpha(buffer[i]))
+            buffer[i] = tolower(buffer[i]);
+    }
+
+    if(strcmp(newBool, "true") == 0
+    || strcmp(newBool, "1") == 0
+    || strcmp(newBool, "on" == 0))
+        return true;
+    else
+    {
+        if(strcmp(newBool, "true") == 0
+        || strcmp(newBool, "1") == 0
+        || strcmp(newBool, "on" == 0))
+            return false;
+    }
+
+    printf("Wrong value for Bool : %s\n", newBool);
+    return -1;
+}
+
+/* ---------------------------------------------------------------------------------- */
+/* ----------------------Data Vaildation Functions(Optional)------------------------- */
+/* ---------------------------------------------------------------------------------- */
 const int testNumber(const char* newNumber, const int length, const int min, const int max, const char* funcname)
 {
     //Is Digit?
@@ -279,7 +314,24 @@ const int testMAC(const char* newMAC)
     return TEST_SUCCESS;
 }
 
-/* ----------------------Command Executation Functions(Required)-------------------------*/
+const int testBool(const char* newBool)
+{
+    if(strcmp(newBool, "true") && strcmp(newBool, "false"))
+    {
+        printf("Wrong value for Bool : %s\n", newBool);
+        if(resultTextBox)
+        {
+            sprintf(resultBuffer, "true와 false만 입력 가능합니다.(%s)\n", newBool);
+            ituTextBoxInput(resultTextBox, resultBuffer);
+        }
+        return TEST_FAILED_WRONG_VALUE;
+    }
+    return TEST_SUCCESS;
+}
+
+/* -------------------------------------------------------------------------------------- */
+/* ----------------------Command Executation Functions(Required)------------------------- */
+/* -------------------------------------------------------------------------------------- */
 
 //test inputted CSID, set new CSID, and show on GUI text wigets.
 //if new csid is "" or NULL, just show current CSID on GUI resultTextBox.
@@ -350,32 +402,32 @@ const int setDEVID(const char* newDEVID)
 
 const int setMaxPower(const char* newMaxPower)
 {
-    // if(newMaxPower == NULL || *newMaxPower == '\0')
-    // {  //Show current MaxPower when NULL or "" inputted.
-    //     printf("MaxPower : %s\n", theConfig.chargingstatus);
-    //     if(resultTextBox)
-    //     {
-    //         sprintf(resultBuffer, "현재 최대 출력은 %d Kw입니다.\n", theConfig.chargingstatus);
-    //         ituTextBoxInput(resultTextBox, resultBuffer);
-    //     }
-    //     return RUN_SUCCESS;
-    // }
+    if(newMaxPower == NULL || *newMaxPower == '\0')
+    {  //Show current MaxPower when NULL or "" inputted.
+        printf("MaxPower : %s\n", theConfig.maxPower);
+        if(resultTextBox)
+        {
+            sprintf(resultBuffer, "현재 최대 출력은 %d Kw입니다.\n", theConfig.maxPower);
+            ituTextBoxInput(resultTextBox, resultBuffer);
+        }
+        return RUN_SUCCESS;
+    }
 
-    // int testResult = testNumber(newMaxPower, 2, 99, 0, "MaxPower");  //실행 전 검증
+    int testResult = testNumber(newMaxPower, 1, 1, 7, "MaxPower");  //실행 전 검증
 
-    // if(testResult != TEST_SUCCESS) //실행 전 검증 실패!
-    //     return testResult;
+    if(testResult != TEST_SUCCESS) //실행 전 검증 실패!
+        return testResult;
 
-    // //값 변경(변경 전후 값 보여주기)
-    // printf("Old MaxPower : %s\n", theConfig.chargingstatus);
-    // strncpy(theConfig.chargingstatus, newMaxPower, sizeof(theConfig.chargingstatus));
-    // printf("New MaxPower : %s\n", theConfig.chargingstatus);
+    //값 변경(변경 전후 값 보여주기)
+    printf("Old MaxPower : %s\n", theConfig.maxPower);
+    theConfig.maxPower = atoi(newMaxPower);
+    printf("New MaxPower : %s\n", theConfig.maxPower);
 
-    // if(resultTextBox)
-    // {
-    //     sprintf(resultBuffer, "최대 출력을 %d Kw로 변경했습니다.\n", newMaxPower);
-    //     ituTextBoxInput(resultTextBox, resultBuffer);
-    // }
+    if(resultTextBox)
+    {
+        sprintf(resultBuffer, "최대 출력을 %d Kw로 변경했습니다.\n", newMaxPower);
+        ituTextBoxInput(resultTextBox, resultBuffer);
+    }
 
     printf("MaxPower - Not Supported now.\n");
     sprintf(resultBuffer, "현재 최대 출력 변경은 지원하지 않습니다.\n");
@@ -456,7 +508,7 @@ const int setAuthPW(const char* newAuthPW)
     return RUN_SUCCESS;
 }
 
-const int setMode(const char* newMode)
+const int setOperationMode(const char* newMode)
 {
     char* modes[]={"일반", "점검",  "무료"};
     if(newMode == NULL || *newMode == '\0')
@@ -477,7 +529,7 @@ const int setMode(const char* newMode)
 
     //값 변경(변경 전후 값 보여주기)
     printf("Old Mode : %s\n", modes[theConfig.OperationMode]);
-    theConfig.OperationMode = newMode;
+    theConfig.OperationMode = atoi(newMode);
     printf("New Mode : %s\n", modes[theConfig.OperationMode]);
 
     if(resultTextBox)
@@ -488,6 +540,72 @@ const int setMode(const char* newMode)
 
     return RUN_SUCCESS;
 }
+
+const int setAuthMode(const char* newMode)
+{
+    char* modes[]={"없음", "서버 인증", "로컬 회원카드 인증",  "로컬 비밀번호 인증", "서버 인증 (QR)", "서버 인증 (모바일)", "최대값"};
+    if(newMode == NULL || *newMode == '\0')
+    {  //Show current Mode when NULL or "" inputted.
+        printf("Mode : %s\n", theConfig.ConfirmSelect);
+        if(resultTextBox)
+        {
+            sprintf(resultBuffer, "현재 인증방식은 %s 입니다.\n", modes[theConfig.ConfirmSelect]);
+            ituTextBoxInput(resultTextBox, resultBuffer);
+        }
+        return RUN_SUCCESS;
+    }
+
+    int testResult = testNumber(newMode, 1, 1, 4, "Mode");  //실행 전 검증
+
+    if(testResult != TEST_SUCCESS) //실행 전 검증 실패!
+        return testResult;
+
+    //값 변경(변경 전후 값 보여주기)
+    printf("Old Mode : %s\n", modes[theConfig.ConfirmSelect]);
+    theConfig.ConfirmSelect = atoi(newMode);
+    printf("New Mode : %s\n", modes[theConfig.ConfirmSelect]);
+
+    if(resultTextBox)
+    {
+        sprintf(resultBuffer, "인증 방식을 %s로 변경했습니다.\n", modes[theConfig.ConfirmSelect]);
+        ituTextBoxInput(resultTextBox, resultBuffer);
+    }
+
+    return RUN_SUCCESS;
+}
+
+// const int setRemoteMode(const char* newMode)
+// {
+//     char* modes[]={"없음", "QR 인증", "휴대폰 인증"};
+//     if(newMode == NULL || *newMode == '\0')
+//     {  //Show current Mode when NULL or "" inputted.
+//         printf("Mode : %s\n", theConfig.remoteMode);
+//         if(resultTextBox)
+//         {
+//             sprintf(resultBuffer, "현재 원격 인증 모드는 %s 입니다.\n", modes[theConfig.remoteMode]);
+//             ituTextBoxInput(resultTextBox, resultBuffer);
+//         }
+//         return RUN_SUCCESS;
+//     }
+
+//     int testResult = testNumber(newMode, 1, 0, 2, "Mode");  //실행 전 검증
+
+//     if(testResult != TEST_SUCCESS) //실행 전 검증 실패!
+//         return testResult;
+
+//     //값 변경(변경 전후 값 보여주기)
+//     printf("Old Mode : %s\n", modes[theConfig.remoteMode]);
+//     theConfig.remoteMode = atoi(newMode);
+//     printf("New Mode : %s\n", modes[theConfig.remoteMode]);
+
+//     if(resultTextBox)
+//     {
+//         sprintf(resultBuffer, "원격 인증 방식을 %s로 변경했습니다.\n", modes[theConfig.remoteMode]);
+//         ituTextBoxInput(resultTextBox, resultBuffer);
+//     }
+
+//     return RUN_SUCCESS;
+// }
 
 const int setAdminPW(const char* newAdminPW)
 {
@@ -575,12 +693,44 @@ const int setScrSaver(const char* newScrSaver)
 
     //값 변경(변경 전후 값 보여주기)
     printf("Old ScrSaver : %s\n", theConfig.screensaver_time);
-    theConfig.screensaver_time = newScrSaver;
+    theConfig.screensaver_time = atoi(newScrSaver);
     printf("New ScrSaver : %s\n", theConfig.screensaver_time);
 
     if(resultTextBox)
     {
         sprintf(resultBuffer, "화면 자동 꺼짐 시간을 %d분으로 변경했습니다.\n", theConfig.screensaver_time);
+        ituTextBoxInput(resultTextBox, resultBuffer);
+    }
+
+    return RUN_SUCCESS;
+}
+
+const int setSoc(const char* newSoc)
+{
+    if(newSoc == NULL || *newSoc == '\0')
+    {  //Show current ScreenSaverTime when NULL or "" inputted.
+        printf("ScrSaver : %s\n", theConfig.targetSoc);
+        if(resultTextBox)
+        {
+            sprintf(resultBuffer, "현재 SoC는 %d%% 입니다.\n", theConfig.targetSoc);
+            ituTextBoxInput(resultTextBox, resultBuffer);
+        }
+        return RUN_SUCCESS;
+    }
+
+    int testResult = testNumber(newSoc, 2, 0, 99, "ScrSaver");  //실행 전 검증
+
+    if(testResult != TEST_SUCCESS) //실행 전 검증 실패!
+        return testResult;
+
+    //값 변경(변경 전후 값 보여주기)
+    printf("Old ScrSaver : %s\n", theConfig.targetSoc);
+    theConfig.targetSoc = atoi(newSoc);
+    printf("New ScrSaver : %s\n", theConfig.targetSoc);
+
+    if(resultTextBox)
+    {
+        sprintf(resultBuffer, "SoC 설정을 %d%%로 변경했습니다.\n", theConfig.targetSoc);
         ituTextBoxInput(resultTextBox, resultBuffer);
     }
 
@@ -607,7 +757,7 @@ const int setAudioLev(const char* newAudioLev)
 
     //값 변경(변경 전후 값 보여주기)
     printf("Old AudioLev : %s\n", theConfig.audiolevel);
-    theConfig.audiolevel = newAudioLev;
+    theConfig.audiolevel = atoi(newAudioLev);
     printf("New AudioLev : %s\n", theConfig.audiolevel);
 
     if(resultTextBox)
@@ -776,7 +926,7 @@ const int setDHCP(const char* newDHCP)
 
 
     printf("Old DHCP : %c\n", theConfig.dhcp);
-    theConfig.dhcp = newDHCP;
+    theConfig.dhcp = atoi(newDHCP);
     printf("New DHCP : %c\n", theConfig.dhcp);
 
     if(resultTextBox)
@@ -970,6 +1120,355 @@ const int runExit(const char* NOTUSE)
     return RUN_SUCCESS;
 }
 
+bool runTestMC(const char* data)
+{
+	if(!CstGetMcstatus())
+	{	
+		MagneticContactorOn();
+        sprintf(resultBuffer, "MC를 켰습니다.\n");
+        ituTextBoxInput(resultTextBox, resultBuffer);
+	}
+	else	
+	{
+		MagneticContactorOff();	
+        sprintf(resultBuffer, "MC를 껐습니다.\n");
+        ituTextBoxInput(resultTextBox, resultBuffer);
+	}
+    return true;
+}
+
+bool runTestLED(const char* data)
+{
+    static bool bLed1Check1 = false;
+	if(!bLed1Check1)
+	{	
+		LEDOn();
+		bLed1Check1 = true;
+
+        sprintf(resultBuffer, "LED를 켰습니다.\n");
+        ituTextBoxInput(resultTextBox, resultBuffer);
+	}
+	else	
+	{
+		LEDOff();			
+		bLed1Check1 = false;
+
+        sprintf(resultBuffer, "LED를 껐습니다.\n");
+        ituTextBoxInput(resultTextBox, resultBuffer);
+	}
+    return true;
+}
+
+bool runTestAMI(const char* data)
+{
+    MagneticContactorOn();
+    sleep(1);
+
+    int AMIValue_H = GetAMIValue() / 100;
+    int AMIValue_L = GetAMIValue() % 100;
+    
+    MagneticContactorOn();
+
+    sprintf(resultBuffer, "전력량계 값은 %d.%02d kWh 입니다.\n", AMIValue_H, AMIValue_L);
+    ituTextBoxInput(resultTextBox, resultBuffer);
+
+    usleep(500*1000);
+
+    return true;
+}
+
+bool runTestPing(const char* data)
+{
+#ifndef EN_CERTI
+	if(iteEthGetLink())		ping_init();
+	else{
+		pingtestcheck = false;		
+	}
+#endif	
+    sprintf(resultBuffer, "Ping 테스트를 %s했습니다.\n", pingtestcheck ? "통과" : "실패");
+    ituTextBoxInput(resultTextBox, resultBuffer);
+	
+    return true;
+}
+
+bool runTestRFID(const char* data)
+{
+    sprintf(resultBuffer, "RFID 모듈 테스트를 %s했습니다.\n", RFIDCardReaderCheck() ? "실패" : "통과" );
+    ituTextBoxInput(resultTextBox, resultBuffer);
+
+    return true;
+}
+
+bool runTestBackLight(const char* data)
+{
+    static bool bBackLightOn;
+	if(!bBackLightOn){
+		BacklightOn();
+		bBackLightOn = true;
+
+        sprintf(resultBuffer, "백라이트를 켰습니다.\n");
+        ituTextBoxInput(resultTextBox, resultBuffer);
+	}
+	else{
+		BacklightOff();
+		bBackLightOn = false;
+
+        sprintf(resultBuffer, "백라이트를 껐습니다.\n");
+        ituTextBoxInput(resultTextBox, resultBuffer);
+	}
+	//ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_OFF, NULL);
+    return true;
+}
+
+// ITUBackground* sColorTestBackground = NULL;
+int colorCheck = 0;
+bool runTestColor(const char* data)
+{
+    // printf("[runTestColor] Get In\n");
+    // sleep(1);
+    
+    // printf("[runTestColor] Test Background\n");
+    // sleep(1);
+    if(sColorTestBackground == NULL)
+    {
+        // ITUBackground* sColorTestBackground = ituSceneFindWidget(&theScene, "ColorTestBackground");
+        // assert(sColorTestBackground);
+        // if(sColorTestBackground == NULL) 
+        {
+            sprintf(resultBuffer, "테스트용 배경이 없습니다.\n");
+            ituTextBoxInput(resultTextBox, resultBuffer);
+            return false;
+        }
+    }
+
+    if(*data == '\e')
+    {
+        sprintf(resultBuffer, "컬러 테스트를 중단했습니다. (총 %d 단계 중 %d에서 중단)\n", TEST_COLOR_END, colorCheck);
+        colorCheck = 0;
+        ituTextBoxInput(resultTextBox, resultBuffer);
+        ituWidgetSetVisible((ITUWidget*)sColorTestBackground, false);
+        sColorTestBackground->graidentMode = ITU_GF_NONE;
+        return true;
+    }
+
+    // printf("[runTestColor] Switch Background Color\n");
+    // sleep(1);
+    switch(colorCheck)
+    {
+        case TEST_COLOR_RED:
+            // ituWidgetSetVisible(&((sColorTestBackground->icon).widget), true);
+            ituWidgetSetVisible((ITUWidget*)sColorTestBackground, true);
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_GREEN;
+            break;
+        case TEST_COLOR_GREEN:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 255, 0);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_BLUE;
+            break;
+        case TEST_COLOR_BLUE:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_YELLOW;
+            break;
+        case TEST_COLOR_YELLOW:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 255, 0);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_CYAN;
+            break;
+        case TEST_COLOR_CYAN:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_MAGENTA;
+            break;
+        case TEST_COLOR_MAGENTA:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 0, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_WHITE;
+            break;
+        case TEST_COLOR_WHITE:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_GRAY;
+            break;
+        case TEST_COLOR_GRAY:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 128, 128, 128);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_COLOR_BLACK;
+            break;
+        case TEST_COLOR_BLACK:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = TEST_GRADATION_RED_LEFT;
+            break;
+        case TEST_GRADATION_RED_LEFT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_RED_RIGHT;
+            break;
+        case TEST_GRADATION_RED_RIGHT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 255, 0, 0);
+            colorCheck = TEST_GRADATION_RED_UP;
+            break;
+        case TEST_GRADATION_RED_UP:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_RED_DOWN;
+            break;
+        case TEST_GRADATION_RED_DOWN:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 255, 0, 0);
+            colorCheck = TEST_GRADATION_GREEN_LEFT;
+            break;
+        case TEST_GRADATION_GREEN_LEFT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 255, 0);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_GREEN_RIGHT;
+            break;
+        case TEST_GRADATION_GREEN_RIGHT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 255, 0);
+            colorCheck = TEST_GRADATION_GREEN_UP;
+            break;
+        case TEST_GRADATION_GREEN_UP:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 255, 0);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_GREEN_DOWN;
+            break;
+        case TEST_GRADATION_GREEN_DOWN:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 255, 0);
+            colorCheck = TEST_GRADATION_BLUE_LEFT;
+            break;
+        case TEST_GRADATION_BLUE_LEFT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 255);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_BLUE_RIGHT;
+            break;
+        case TEST_GRADATION_BLUE_RIGHT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 255);
+            colorCheck = TEST_GRADATION_BLUE_UP;
+            break;
+        case TEST_GRADATION_BLUE_UP:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 255);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_BLUE_DOWN;
+            break;
+        case TEST_GRADATION_BLUE_DOWN:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 255);
+            colorCheck = TEST_GRADATION_WHITE_LEFT;
+            break;
+        case TEST_GRADATION_WHITE_LEFT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_WHITE_RIGHT;
+            break;
+        case TEST_GRADATION_WHITE_RIGHT:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_HORIZONTAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 255, 255, 255);
+            colorCheck = TEST_GRADATION_WHITE_UP;
+            break;
+        case TEST_GRADATION_WHITE_UP:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 0, 0, 0);
+            colorCheck = TEST_GRADATION_WHITE_DOWN;
+            break;
+        case TEST_GRADATION_WHITE_DOWN:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 0, 0, 0);
+            sColorTestBackground->graidentMode = ITU_GF_VERTICAL;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 255, 255, 255);
+            colorCheck = TEST_IMAGE;
+            break;
+        case TEST_IMAGE:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 255, 255, 255);
+            ituIconLoadJpegFile((ITUIcon*)sColorTestBackground, "B:/media/testimage.jpg");
+            colorCheck = TEST_COLOR_END;
+            break;
+        default:
+            ituWidgetSetVisible((ITUWidget*)sColorTestBackground, false);
+            // ituWidgetSetColor(&((sColorTestBackground->icon).widget), 0, 255, 255, 255);
+            // ituSetColor(&(sColorTestBackground->graidentColor), 0, 255, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = 0;
+            sprintf(resultBuffer, "컬러 테스트를 마쳤습니다.\n");
+            ituTextBoxInput(resultTextBox, resultBuffer);
+            break;
+    }
+	//ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_OFF, NULL);
+
+    printf("[runTestColor] Exit\n");
+
+    return true;
+}
+
+bool runTestPattern(const char* data)
+{
+    // printf("[runTestColor] Get In\n");
+    // sleep(1);
+    
+    // printf("[runTestColor] Test Background\n");
+    // sleep(1);
+    if(sColorTestBackground == NULL)
+    {
+        // ITUBackground* sColorTestBackground = ituSceneFindWidget(&theScene, "ColorTestBackground");
+        // assert(sColorTestBackground);
+        // if(sColorTestBackground == NULL) 
+        {
+            sprintf(resultBuffer, "테스트용 배경이 없습니다.\n");
+            ituTextBoxInput(resultTextBox, resultBuffer);
+            return false;
+        }
+    }
+
+    // printf("[runTestColor] Switch Background Color\n");
+    // sleep(1);
+    switch(colorCheck)
+    {
+        case TEST_COLOR_RED:
+            ituWidgetSetColor((ITUWidget*)sColorTestBackground, 255, 255, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            ituSetColor(&(sColorTestBackground->graidentColor), 255, 255, 255, 255);
+            ituIconLoadJpegFile((ITUIcon*)sColorTestBackground, "B:/media/testpattern.jpg");
+            colorCheck = TEST_COLOR_END;
+            break;
+        default:
+            ituWidgetSetVisible((ITUWidget*)sColorTestBackground, false);
+            // ituWidgetSetColor(&((sColorTestBackground->icon).widget), 0, 255, 255, 255);
+            // ituSetColor(&(sColorTestBackground->graidentColor), 0, 255, 255, 255);
+            sColorTestBackground->graidentMode = ITU_GF_NONE;
+            colorCheck = 0;
+            sprintf(resultBuffer, "패턴 테스트를 마쳤습니다.\n");
+            ituTextBoxInput(resultTextBox, resultBuffer);
+            break;
+    }
+	//ioctl(ITP_DEVICE_BACKLIGHT, ITP_IOCTL_OFF, NULL);
+
+    printf("[runTestColor] Exit\n");
+
+    return true;
+}
+
 /* ----------------------키보드 구동 함수-------------------------*/
 
 void runInputted()
@@ -1013,10 +1512,18 @@ void runInputted()
     {
         result = setAuthPW(data);
     }
-    else if(strcmp("mode", command) == 0)
+    else if(strcmp("opmode", command) == 0)
     {
-        result = setMode(data);
+        result = setOperationMode(data);
     }
+    else if(strcmp("authmode", command) == 0)
+    {
+        result = setAuthMode(data);
+    }
+    // else if(strcmp("remotemode", command) == 0)
+    // {
+    //     result = setRemoteMode(data);
+    // }
     else if(strcmp("adminpw", command) == 0)
     {
         result = setAdminPW(data);
@@ -1028,6 +1535,10 @@ void runInputted()
     else if(strcmp("scrsaver", command) == 0)
     {
         result = setScrSaver(data);
+    }
+    else if(strcmp("soc", command) == 0)
+    {
+        result = setSoc(data);
     }
     else if(strcmp("audiolev", command) == 0)
     {
@@ -1073,13 +1584,45 @@ void runInputted()
     {
         result = setFtpPW(data);
     }
-    else if(strcmp("exit", command) == 0)
+    else if(strcmp("clear", command) == 0)
     {
         result = runClear(data);
     }
     else if(strcmp("exit", command) == 0)
     {
         result = runExit(data);
+    }
+    else if(strcmp("testmc", command) == 0)
+    {
+        result = runTestMC(data);
+    }
+        else if(strcmp("testled", command) == 0)
+    {
+        result = runTestLED(data);
+    }
+        else if(strcmp("testami", command) == 0)
+    {
+        result = runTestAMI(data);
+    }
+        else if(strcmp("testping", command) == 0)
+    {
+        result = runTestPing(data);
+    }
+    else if(strcmp("testrfid", command) == 0)
+    {
+        result = runTestRFID(data);
+    }
+    else if(strcmp("testbacklight", command) == 0)
+    {
+        result = runTestBackLight(data);
+    }
+    else if(strcmp("testcolor", command) == 0)
+    {
+        result = runTestPattern(data);
+    }
+    else if(strcmp("testcolor2", command) == 0)
+    {
+        result = runTestColor(data);
     }
 
     if(result == FIND_FAILED)
@@ -1135,7 +1678,7 @@ void writeInputBuffer(const char inputted)
 ITUTextBox* sHelpPopupBox = NULL;
 int popupPage = -1;
 
-void popupHelp(uint8_t code)
+void popupHelp(uint32_t code)
 {
     if(code == KEYCODE_ESCAPE)
     {
@@ -1166,8 +1709,8 @@ devsm     기기의 Subnet Mask를 설정합니다.\n\
   예) devsm 255.255.255.0\n\n\
 devmac    기기의 MAC 주소를 설정합니다.\n\
   예) devmac 01:12:34:56:78:90\n\n\
-devdhcp   기기의 MAC 주소를 설정합니다.\n\
-  예) devmac 12:34:56:78:90:af\n\n\n\
+devdhcp   기기의 DHCP 사용 여부를 설정합니다.\n\
+  예) devdhcp 1\n\n\n\
   --> ESC키를 누르면 도움말 창을 닫습니다.\n\
   --> F1키를 누르면 다음 페이지로 넘어갑니다. (1/4)");
             ituWidgetSetVisible(&(sHelpPopupBox->text.widget), true);
@@ -1216,10 +1759,20 @@ freetime  무료충전모드일 때 최대 충전시간을 분 단위로 설정�
         case 3:
             ituTextBoxSetString(sHelpPopupBox,
 "테스트 및 기타\n\n\
-testnet   네트워크 테스트를 시작합니다.\n\
-  예) testnet\n\n\
-testio    입출력테스트를 시작합니다.\n\
-  예) testio\n\n\
+testmc    MC 테스트를 시작합니다.\n\
+  예) testmc\n\n\
+testled   LED 테스트를 시작합니다.\n\
+  예) testled\n\n\
+testami   전력량계 테스트를 시작합니다.\n\
+  예) testami\n\n\
+testping  핑 테스트를 시작합니다.\n\
+  예) testping\n\n\
+testrfid  RFID 테스트를 시작합니다.\n\
+  예) testrfid\n\n\
+testbacklight LCD 백라이트 테스트를 시작합니다.\n\
+  예) testbacklight\n\n\
+testcolor LCD 컬러 출력 테스트를 시작합니다.\n\
+  예) testcolor\n\n\
 help      해당 명령의 자세한 설명을 표시합니다.\n\
   예) testio\n\n\
 각 설정의 현재 값을 알고 싶다면 명령만 입력합니다.\n\
@@ -1228,8 +1781,9 @@ help      해당 명령의 자세한 설명을 표시합니다.\n\
       만 입력합니다.\n\n\n\
   --> F1키 또는 ESC키를 누르면 도움말 화면을 닫습니다. (4/4)");
             //ituWidgetSetVisible(true);
+            break;
 #if 0
-        case 3:
+        case 4:
             ituTextSetString(sHelpPopupBox, 
 "OCPP 설정\n\n\
 ocppaddr  OCPP 프로토콜을 통해 데이터를 전송할 서버의 주소를 설정합니다. \n\
@@ -1272,6 +1826,12 @@ void commandInput(uint32_t flag, uint32_t code)
     char inputted = scancodeToChar(code);
 
     printf("%c, %d\n", inputted, code);
+
+    if(colorCheck) 
+    {
+        runTestColor(&inputted);
+        return;
+    }
 
     if(inputted == NULL)
     {  //Not caractorizable key inputted -> Some special function or return immediately

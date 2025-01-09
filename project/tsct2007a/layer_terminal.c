@@ -11,18 +11,22 @@ InfoTextBox
 
 static ITUTextBox* sInputTextBox;
 static ITUTextBox* sInfoTextBox;
+static ITUBackground* sColorTestBackground;
 
 
 
 bool TerminalOnEnter(ITUWidget* widget, char* param)
 {
     sInputTextBox = ituSceneFindWidget(&theScene, "InputTextBox");
-    assert(sTriggerBtn);
+    assert(sInputTextBox);
 
     sInfoTextBox = ituSceneFindWidget(&theScene, "InfoTextBox");
-    assert(sTriggerBtn);
+    assert(sInfoTextBox);
 
-    bindTextBox(sInputTextBox, sInfoTextBox);
+    sColorTestBackground = ituSceneFindWidget(&theScene, "ColorTestBackground");
+    assert(sColorTestBackground);
+
+    bindTextBox(sInputTextBox, sInfoTextBox, sColorTestBackground);
     hookKeyboard(commandInput);
 
     return true;
