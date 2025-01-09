@@ -72,11 +72,11 @@ bool bGloAdminStatus;
 #define GPIO_LED_BLUE			49
 
 //Output MC
-#define MC_CTRL_LIVE 		GPIO_CP_RL0
-#define MC_CTRL_LIVE_R		GPIO_CP_RL1
+#define MC_CTRL_NEUTRAL 	GPIO_CP_RL0
+#define MC_CTRL_NEUTRAL_R	GPIO_CP_RL1
 
-#define MC_CTRL_NEUTRAL		GPIO_CP_RL3
-#define MC_CTRL_NEUTRAL_R	GPIO_CP_RL4
+#define MC_CTRL_LIVE		GPIO_CP_RL3
+#define MC_CTRL_LIVE_R		GPIO_CP_RL4
 
 #define GPIO_CP_RL0 16
 #define GPIO_CP_RL1 17
