@@ -92,6 +92,7 @@ void touchKeyTask(void)
             if(lastPush >= TOUCHKEY_LONG_PUSH_TIME)
             {//long push
                 printf("[TOUCHKEY] Long Touch! %d\n", lastPush);
+                BuzzerDoubleBeep();
                 // listener(true);
                 if(privilegedListener) privilegedListener(true);
                 else listenerStack[listenerStackTop](true);
@@ -99,6 +100,7 @@ void touchKeyTask(void)
             else
             {//short push
                 printf("[TOUCHKEY] Short Touch! %d\n", lastPush);
+                BuzzerBeep();
                 // listener(false); 
                 if(privilegedListener) privilegedListener(false);
                 else listenerStack[listenerStackTop](false);

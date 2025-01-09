@@ -76,6 +76,7 @@ int SDL_main(int argc, char *argv[]){
     
     CtLogMagenta("[SDL_main] NetworkInit \r\n");
     xNetworkInit(); 
+    BuzzerInit();
     sleep(2);
 
     //For Test 24.11.11
@@ -88,7 +89,6 @@ int SDL_main(int argc, char *argv[]){
         // WebServerInit();
 
     // CtLogMagenta("[SDL_main] BuzzerInit \r\n");usleep(100000);
-    BuzzerInit();
     CtLogMagenta("[SDL_main] ScreenInit \r\n");
     ScreenInit();
     CtLogMagenta("[SDL_main] ExternalInit \r\n");

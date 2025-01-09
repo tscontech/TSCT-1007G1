@@ -1,5 +1,3 @@
-#if defined(GPIO_BUZZER)
-
 /**
 *       @file
 *               cstbuzzer.c
@@ -16,6 +14,7 @@
 #include "ctrlboard.h"
 #include "tsctcommon.h"
 
+#if defined(GPIO_BUZZER)
 
 //-----------------------------------------------------------------------
 // MACRO
@@ -53,6 +52,13 @@ void BuzzerBeep(void)
 	ithGpioClear(GPIO_BUZZER);
 }
 
+void BuzzerDoubleBeep(void)
+{
+	ithGpioSet(GPIO_BUZZER);
+	usleep(50*1000);
+	ithGpioClear(GPIO_BUZZER);
+}
+
 #else
 
 void BuzzerInit(void)
@@ -71,6 +77,11 @@ void BuzzerOff(void)
 }
 
 void BuzzerBeep(void)
+{
+
+}
+
+void BuzzerDoubleBeep(void)
 {
 
 }
