@@ -23,7 +23,7 @@ bool MCStatus;
 
 void dummyListener(bool longPush)
 {
-    printf("[TOUCHKEY] Dummy Listener Run! longPush = %d", longPush);
+    printf("[TOUCHKEY] Dummy Listener Run! longPush = %d\n", longPush);
 }
 
 void pushTouchKeyListener(TouchKeyListener l)
