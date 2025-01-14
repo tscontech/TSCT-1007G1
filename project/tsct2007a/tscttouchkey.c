@@ -76,36 +76,50 @@ void setPrivilegedTouchKeyListener(TouchKeyListener l)
 //touch key task. run event listener when key up event.
 void touchKeyTask(void)
 {
-    bool now;
+    bool now, screenOn;
 
     while(1)
     {
         now = ithGpioGet(GPIO_TOUCHKEY1);
+
+        if(screenOff)
+        {
+            ScreenOnScenario();  //Turn on screen
+            screenOn = true;
+            usleep(100 * 1000);
+            continue;
+        }
         
         if(now)
-        {
-            ++lastPush;  //Pushing key
+        {   //Pushing key
+            ++lastPush;
             printf("[TOUCHKEY] Touching! %d\n", lastPush);
         }
-        else if(lastPush)    //Release key
-        {
-            if(lastPush >= TOUCHKEY_LONG_PUSH_TIME)
-            {//long push
-                printf("[TOUCHKEY] Long Touch! %d\n", lastPush);
-                // listener(true);
-                if(privilegedListener) privilegedListener(true);
-                else listenerStack[listenerStackTop](true);
-            }
-            else
-            {//short push
-                printf("[TOUCHKEY] Short Touch! %d\n", lastPush);
-                // listener(false); 
-                if(privilegedListener) privilegedListener(false);
-                else listenerStack[listenerStackTop](false);
-            }
+        else 
+        {   //Release key
+            if(lastPush)
+            {
+                if(screenOn)
+                {
+                    screenOn = false;
+                }
+                else if(lastPush >= TOUCHKEY_LONG_PUSH_TIME)
+                {//long push
+                    printf("[TOUCHKEY] Long Touch! %d\n", lastPush);
+                    // listener(true);
+                    if(privilegedListener) privilegedListener(true);
+                    else listenerStack[listenerStackTop](true);
+                }
+                else
+                {//short push
+                    printf("[TOUCHKEY] Short Touch! %d\n", lastPush);
+                    // listener(false); 
+                    if(privilegedListener) privilegedListener(false);
+                    else listenerStack[listenerStackTop](false);
+                }
 
-            ScreenOnScenario();  //Turn on screen
-            lastPush = 0;
+                lastPush = 0;
+            }
         }
 
         usleep(100 * 1000);
