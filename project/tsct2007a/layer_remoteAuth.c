@@ -45,7 +45,7 @@ static ITUIcon* sQR_icon;
 uint8_t Security_NO = 0;
 char Security_NO_buf[3];
 
-char qrcode_buf[120];
+char qrcode_buf[256];
 
 static uint16_t WaitQRCnt = 0;
 
@@ -68,26 +68,27 @@ void Tsct_GenQR(void)
 
 static void* sWaitQRMonitoringTaskFuntion(void* arg)
 {
-    /*
-	while(sDLsWaitQRMonitoring)
-	{
-        sleep(1);
-        if(b1q_RcvFlg){
-            WaitQRCnt = 0;
-            b1q_RcvFlg = false;
-            sDLsWaitQRMonitoring = false;
-            Tsct_GenQR();
-        }else {
-            WaitQRCnt++;
-            if(WaitQRCnt>5){
-                //QRGotoSatartLayer();
-                QR_Cancel_Code = QR_CANCLE_TIMEOUT;
-                ShowWhmErrorDialogBox(PAY_ERR);
-            }
-        }
-    }
-    sWaitQRMonitoringTask = NULL;
-    */
+    // TSCT Protocol
+	// while(sDLsWaitQRMonitoring)
+	// {
+    //     sleep(1);
+    //     if(b1q_RcvFlg){
+    //         WaitQRCnt = 0;
+    //         b1q_RcvFlg = false;
+    //         sDLsWaitQRMonitoring = false;
+    //         Tsct_GenQR();
+    //     }else {
+    //         WaitQRCnt++;
+    //         if(WaitQRCnt>5){
+    //             //QRGotoSatartLayer();
+    //             QR_Cancel_Code = QR_CANCLE_TIMEOUT;
+    //             ShowWhmErrorDialogBox(PAY_ERR);
+    //         }
+    //     }
+    // }
+    // sWaitQRMonitoringTask = NULL;
+
+    //TODO: OCPP Protocol version
 }
 
 void QRGotoSatartLayer(void)
@@ -97,6 +98,11 @@ void QRGotoSatartLayer(void)
 	GotoStartLayer();
 	//OkDialogSetOkListener(GotoStartLayer);
 	// ShowWhmErrorDialogBox(PAY_ERR);  //If q1 sent, Error message must pop up.
+}
+
+void QRTimerTimeout(void)
+{
+    ShowInfoDialogBox(EVENT_TIMEOUT_TIMER);
 }
 
 static void QRStopOnDialog(void)
@@ -120,9 +126,10 @@ static void QRStopOffDialog(void)
 
 bool remoteOnEnter(ITUWidget* widget, char* param)
 {
-    /*
+    
     uint8_t indx;
     ChannelType activeCh = CstGetUserActiveChannel();  
+    shmDataAppInfo.app_order = APP_ORDER_QR_WAIT;
     
 	CtLogRed("Enter Remote Auth layer..\n");
 
@@ -148,27 +155,24 @@ bool remoteOnEnter(ITUWidget* widget, char* param)
     // 2. After Server Complete Bil process, Receive Check Security NO.
     // 3. Send a1 and process Charge flow.
 
-    if(++Security_NO > 99)        Security_NO = 0;  
-    
-    memset(qrcode_buf, NULL, sizeof(qrcode_buf));
+    shmDataAppInfo.secure_no[0] = rand() % 10;
+    shmDataAppInfo.secure_no[1] = rand() % 10;
 
-    if(theConfig.serverip[0] == 'd')
-        memcpy(qrcode_buf,TSCT_DEV_DOMAIN,sizeof(TSCT_DEV_DOMAIN)); 
+    if(theConfig.dns[0] == 'd') 
+        sprintf(qrcode_buf, "https://dev-tscs.tscontech.com/api/kakaopay/call_one?cs_id=%s&cp_id=%s&cnctr_id=%02d&no=%d%d", 
+                theConfig.siteid, theConfig.devid1, 1, shmDataAppInfo.secure_no[0], shmDataAppInfo.secure_no[1]); //shmDataAppInfo.connector_id = 1
     else
-        memcpy(qrcode_buf,TSCT_OP_DOMAIN,sizeof(TSCT_OP_DOMAIN));    
-    strcat(qrcode_buf, "?cs_id=");
-    strcat(qrcode_buf,theConfig.siteid);                    strcat(qrcode_buf, "&cp_id=");
-    strcat(qrcode_buf,theConfig.devid1);                    strcat(qrcode_buf, "&cnctr_id=");
-    snprintf(Security_NO_buf, sizeof(Security_NO_buf), "%02d",activeCh+1);
-    strcat(qrcode_buf,Security_NO_buf);    strcat(qrcode_buf, "&no=");
-    snprintf(Security_NO_buf, sizeof(Security_NO_buf), "%02d",Security_NO);    
-    strcat(qrcode_buf, Security_NO_buf);
+        sprintf(qrcode_buf, "https://tscs.tscontech.com/api/kakaopay/call_one?cs_id=%s&cp_id=%s&cnctr_id=%02d&no=%d%d", 
+                theConfig.siteid, theConfig.devid1, 1, shmDataAppInfo.secure_no[0], shmDataAppInfo.secure_no[1]); //shmDataAppInfo.connector_id = 1
+
 
     qrencode(qrcode_buf, strlen(qrcode_buf), CFG_PUBLIC_DRIVE ":/media/qren-code-test1.png");
 
     ituIconLoadPngFileSync(sQR_icon, CFG_PUBLIC_DRIVE ":/media/qren-code-test1.png");
 
-    shmDataAppInfo.app_order = APP_ORDER_CARD_READER;
+    ituWidgetSetVisible(sQRGentxt1, false);
+    ituWidgetSetVisible(sQR_icon, true);
+
 	shmDataAppInfo.charge_request_type = 0x01;	
     
     WaitQRCnt = 0;
@@ -183,8 +187,10 @@ bool remoteOnEnter(ITUWidget* widget, char* param)
 		pthread_detach(sWaitQRMonitoringTask);
 	}	
 
-*/
-    TopSetTimer(REMOTE_TIMEOUT, QRGotoSatartLayer);
+	usleep(500*1000);
+
+
+    TopSetTimer(REMOTE_TIMEOUT, QRTimerTimeout);
 
     setTouchKeyListener(touchkeyQRPressed);
 

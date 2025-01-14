@@ -411,6 +411,7 @@ typedef struct
     unsigned char charge_start_time[7];               // Charge Starting Time
     MEM_TYPE member_type;			   		        // using meber type
     
+    uint32_t 	  secure_no[2];						// 원격 인증 번호
 }SHM_DATA_APP_INFO;
 
 typedef struct 
@@ -533,11 +534,13 @@ typedef enum
  */
 typedef enum
 {
-    USER_AUTH_NONE = 0, // 0: ????.
-    USER_AUTH_NET,   	// 1: server
-    USER_AUTH_CARD,		// 2: card
-    USER_AUTH_PASSWORD,	// 3: button
-	USER_AUTH_MAX		// 4: 
+    USER_AUTH_NONE = 0,     // 0: ????.
+    USER_AUTH_NET,          // 1: server
+    USER_AUTH_CARD,         // 2: card
+    USER_AUTH_PASSWORD,  	// 3: button
+    USER_AUTH_NET_QR,       // 4: server + qr
+    USER_AUTH_NET_REMOTE,   // 5: server + remote
+	USER_AUTH_MAX           // 6: 
 } UserAuthType;
 
 typedef struct
@@ -1136,7 +1139,8 @@ typedef enum {
    APP_ORDER_FINISH,            //16
    APP_ORDER_CAR_NUMAUTH,		//17 straffic add 190321 _daAn
    APP_ORDER_CANCEL_PREPAY,		// 18 straffic add 190529 _daAn 
-   APP_ORDER_ERR_REBOOT         //19 Error Occure go Reset
+   APP_ORDER_ERR_REBOOT,         //19 Error Occure go Reset
+   APP_ORDER_QR_WAIT             //20
 }APP_ORDER;
 void PlayVideo(int x, int y, int width, int height, int bgColor, int volume);
 void WaitPlayVideoFinish(void);
