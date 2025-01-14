@@ -72,6 +72,11 @@ static void CardReaderListenerOnAuthUser(char *data, int size) // straffic 19032
 	}
 }
 
+void rfidWaitTimeout(void)
+{
+	ShowInfoDialogBox(EVENT_TIMEOUT_TIMER);
+}
+
 bool RfidCardOnEnter(ITUWidget* widget, char* param)
 {
 	CtLogRed("Enter RfidCard layer..\n");
@@ -103,7 +108,7 @@ bool RfidCardOnEnter(ITUWidget* widget, char* param)
 
 	CardReaderStartMonitoring(CardReaderListenerOnAuthUser);
 	
-	TopSetTimer(CARD_WAIT_TIMEOUT, GotoStartLayer);
+	TopSetTimer(CARD_WAIT_TIMEOUT, rfidWaitTimeout);
 
 	setTouchKeyListener(touchkeyMemberCardPressed);
 	

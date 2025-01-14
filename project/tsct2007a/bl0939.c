@@ -70,6 +70,8 @@ static uint_fast32_t errorCount = 0;
 static pthread_t sBLLeak;
 static bool isLeaked = false;
 
+static uint32_t parameterUpdated = 0;
+
 enum{
 	UID_CARD=1,
 	TMONEY_CARD,
@@ -432,7 +434,7 @@ buffer.checksum, ret, ithGpioGet(GPIO_BL0939_LEAK));
     return ret == 35 && !errorCount;
 }
 
-bool BL0939Check(void)
+bool BL0939CheckConnection(void)
 {	
 	bool testResult = false;
 
@@ -515,7 +517,6 @@ static void* BLTask(void* arg)
 {
 
     bool notConnected = true;
-    uint32_t parameterUpdated = 0;
 
     uint8_t data[6];
     usleep(3*1000*1000);
@@ -524,7 +525,7 @@ static void* BLTask(void* arg)
     {
         if(notConnected)
         {
-            notConnected = BL0939Check();
+            notConnected = BL0939CheckConnection();
 
             if(!notConnected)
                 printf("[BL0939] First Connect - Pass\n");
@@ -580,7 +581,7 @@ static void* BLTask(void* arg)
                     parameterUpdated <<= 1;
                     break;
             }
-            usleep(500*1000);
+            usleep(100*1000);
             continue;
         }
         // else
@@ -681,6 +682,10 @@ void BL0939LeakInterrupt(unsigned int pin, void *arg)
     ithExitCritical();  //Unlock spinlock
 }
 
+bool BL0939Check(void)
+{
+    return parameterUpdated == 0b10000;
+}
 
 void BL0939Init(void)
 {

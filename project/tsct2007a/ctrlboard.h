@@ -323,6 +323,7 @@ typedef enum{
 #define  TSCT_SELF_TEST 			(32)	// Bit[32] self test result  Bad 0, Ok 1
 #define  TSCT_TIMEOUT_SEQUENCY		(36)	// Bit[36] sequency time out Err 0, Ok 1
 
+//TODO: 에러코드 정리하기(윗쪽의 공통 에러코드로 통합시키기기)
 // Error Code
 #define ERR_SERVER_DISCON           (0)     // Server Disconnect 
 #define ERR_AMI_DISCON              (2)     // AMI Disconnect
@@ -335,6 +336,22 @@ typedef enum{
 #define ERR_AMI                     (64)
 #define ERR_LEAK                    (13)
 #define ERR_TIMEOUT                 (10)
+
+// Event Code
+#define EVENT_CANCEL                 (1)
+#define EVENT_FAILED_AUTH_RFID       (2)
+#define EVENT_FAILED_AUTH_CREDIT     (3)
+#define EVENT_TIMEOUT_TIMER          (11)
+#define EVENT_TIMEOUT_CONN           (12)
+#define EVENT_TIMEOUT_CHARGE         (13)
+#define EVENT_WAIT_SERVER            (21)
+#define EVENT_WAIT_AMI               (22)
+#define EVENT_WAIT_RFID              (23)
+#define EVENT_WAIT_CREDIT            (24)
+#define EVENT_WAIT_PLC               (25)
+#define EVENT_WAIT_OBD               (26)
+#define EVENT_WAIT_BL                (27)
+
 
 /* v1.4.0
 #define ERR_SERVER_DISCON           (0)     // Server Disconnect 

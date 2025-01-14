@@ -436,6 +436,75 @@ void WhmErrorDialogTouchkeyListener(bool longPress)
 	OkDialogHide(0);
 }
 
+void ShowInfoDialogBox(unsigned short eventCode)
+{
+	char title[32], title_txt1[40], title_txt2[40];
+	int timer;
+
+	if(shmDataAppInfo.app_order == APP_ORDER_CHARGING)
+		TSCT_ChargingStop();
+
+	sprintf(title, "CODE %2d", eventCode);
+
+	switch(eventCode)
+	{
+		case EVENT_CANCEL : 
+			sprintf(title_txt1, STR_CANCEL_1);
+			sprintf(title_txt2, STR_CANCEL_2);
+			ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));
+			break;
+
+		case EVENT_FAILED_AUTH_RFID : 
+			sprintf(title_txt1, STR_FAILED_AUTH_RFID_1);
+			sprintf(title_txt2, STR_FAILED_AUTH_RFID_2);
+			ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));
+			break;
+
+		case EVENT_TIMEOUT_TIMER : 
+			sprintf(title_txt1, STR_TIMER_TIMEOUT_1);
+			sprintf(title_txt2, STR_TIMER_TIMEOUT_2);
+			ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));
+
+			break;
+
+		case EVENT_TIMEOUT_CONN : 
+			sprintf(title_txt1, STR_CONNECTOR_TIMEOUT_1);
+			sprintf(title_txt2, STR_CONNECTOR_TIMEOUT_2);
+			ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
+			break;
+
+		case EVENT_TIMEOUT_CHARGE : 
+			sprintf(title_txt1, STR_COMMUNICATION_TIMEOUT_1);
+			sprintf(title_txt2, STR_COMMUNICATION_TIMEOUT_2);
+			ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
+			break;
+
+		case EVENT_WAIT_SERVER :	/*fall-through*/
+		case EVENT_WAIT_AMI : 		/*fall-through*/
+		case EVENT_WAIT_RFID : 		/*fall-through*/
+		case EVENT_WAIT_CREDIT : 	/*fall-through*/
+		case EVENT_WAIT_PLC : 		/*fall-through*/
+		case EVENT_WAIT_BL :
+			sprintf(title_txt1, STR_WAIT_1);
+			sprintf(title_txt2, STR_WAIT_2);
+			ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));
+			break;
+		default :
+			sprintf(title_txt1, STR_WAIT_1);
+			sprintf(title_txt2, STR_WAIT_2);
+			ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));
+			break;
+	}
+
+	
+
+	OkDialogSetTitle(title, title_txt1, title_txt2);
+	OkDialogShow(false, 0);
+	DialogSetTimer(OKDIALOG_TIMEOUT);
+	// GotoStartLayer();
+	setPrivilegedTouchKeyListener(WhmErrorDialogTouchkeyListener);
+}
+
 void ShowFatalErrorDialogBox(unsigned short Ecode)
 {
 	char title[32], title_txt1[40], title_txt2[40];
@@ -450,10 +519,10 @@ void ShowFatalErrorDialogBox(unsigned short Ecode)
 		sprintf(title_txt2, STR_TOUCHKEY_LEAK_DIALOG_2);
 		ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));
 	}
-	else if(ERR_TIMEOUT)
+	else if(Ecode == ERR_TIMEOUT)
 	{
-		sprintf(title_txt1, STR_TIMEOUT_1);
-		sprintf(title_txt2, STR_TIMEOUT_2);
+		sprintf(title_txt1, STR_TIMER_TIMEOUT_1);
+		sprintf(title_txt2, STR_TIMER_TIMEOUT_2);
 		ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
 	}
 	else {
@@ -505,7 +574,8 @@ void ShowWhmErrorDialogBox(unsigned short Ecode)
 		OkDialogSetTitle(title, title_txt1, title_txt2);
 		OkDialogShow(false, 0);
 		DialogSetTimer(OKDIALOG_TIMEOUT);
-	}	else {
+	}	
+	else {
 		sprintf(title_txt1, CONNECT_ERR_TXT1);
 		sprintf(title_txt2, CONNECT_ERR_TXT2);
 		OkDialogSetTitle(title, title_txt1, title_txt2);

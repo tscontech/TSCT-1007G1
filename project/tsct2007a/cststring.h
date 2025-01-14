@@ -46,8 +46,26 @@
 #define STR_TOUCHKEY_LEAK_DIALOG_1      "누전 발생"
 #define STR_TOUCHKEY_LEAK_DIALOG_2      "관리자에게 문의해주세요."
 
-#define STR_TIMEOUT_1                   "시간 초과"
-#define STR_TIMEOUT_2                   "처음부터 다시 시도해주세요."
+#define STR_CANCEL_1                    "사용자 요청에 의한 취소"
+#define STR_CANCEL_2                    "처음부터 다시 시도해주세요."
+
+#define STR_FAILED_AUTH_RFID_1          "회원 카드 인증 실패"
+#define STR_FAILED_AUTH_RFID_2          "다시 시도해주세요."
+
+#define STR_TIMER_TIMEOUT_1             "시간 초과"
+#define STR_TIMER_TIMEOUT_2             "처음부터 다시 시도해주세요."
+
+#define STR_CONNECTOR_TIMEOUT_1         "커넥터 연결 인식 실패"
+#define STR_CONNECTOR_TIMEOUT_2         "커넥터를 다시 연결해주세요."
+
+#define STR_COMMUNICATION_TIMEOUT_1     "차량 통신 연결 실패"
+#define STR_COMMUNICATION_TIMEOUT_2     "커넥터를 다시 연결해주세요."
+
+#define STR_WAIT_1                      "충전기 준비 중입니다."
+#define STR_WAIT_2                      "잠시 기다려주세요."
+
+#define STR_OVER_POWER_1                "충전 전류 제어 실패"
+#define STR_OVER_POWER_2                "관리자에게 문의해주세요."
 
 #define STR_EMERGENCY_DIALOG_11			"비상버튼을 오른쪽으로 돌려"
 #define STR_EMERGENCY_DIALOG_12			"해제하고 커버를 닫아주세요."
