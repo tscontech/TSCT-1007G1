@@ -1,5 +1,5 @@
 #include "tsctth.h"
-
+#include "ctrlboard.h"
 #include "ite/itp.h"
 #include "iic/mmp_iic.h"
 
@@ -40,10 +40,7 @@ void TH_i2c_read_byte(uint8_t dev_addr, uint8_t addr, uint8_t* dataBuffer)
 
 void getTH()
 {
-
     unsigned char I2C_temp1[6]={0, };
-
-	int Temp_degC=0, Humi_RH=0;
 
 	TH_i2c_write_byte(Temp_I2C_ADDR, 0xFD, 0xFD);
 	usleep(10000);
@@ -51,10 +48,10 @@ void getTH()
 	printf("MainStartOnPress <%d> <%d> <%d> <%d> <%d> <%d> \n", I2C_temp1[0], I2C_temp1[1], I2C_temp1[2], I2C_temp1[3], I2C_temp1[4], I2C_temp1[5]);
 
 	//섭씨
-	Temp_degC= (175* (I2C_temp1[0] *256+I2C_temp1[1]) /65535) -45;
-	Humi_RH= (125* (I2C_temp1[3] *256+I2C_temp1[4]) /65535) -6;
+	ChargerTemperate = (175* (I2C_temp1[0] *256+I2C_temp1[1]) /65535) -45;
+	ChargerHumidity = (125* (I2C_temp1[3] *256+I2C_temp1[4]) /65535) -6;
 
-    printf("MainStartOnPress <Temp_degC : %d> <Humi_RH : %d> \n", Temp_degC, Humi_RH);
+    printf("MainStartOnPress <Temp_degC : %d> <Humi_RH : %d> \n", ChargerTemperate, ChargerHumidity);
 
 }
 
