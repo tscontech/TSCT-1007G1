@@ -42,6 +42,22 @@ static int gChChargeTime = 0;
 
 static int bUpdateFail = 0x01; // Zero : Update sucess / Not Zero : Udate Fail / Set after send 1K
 
+static uint8_t CP_PWM_DUTY_TABLE[12] = 
+{
+	100,	// 0kw => 0.0%	
+	90,		// 1kw => 7.6%
+	85,		// 2kw => 15.1%
+	77,		// 3kw => 22.7%
+	70,		// 4kw => 30.3%
+	62,		// 5kw => 37.9%
+	54,		// 6kw => 45.5%
+	47,		// 7kw  => 53.3%
+	39,		// 8kw  => 60.6%
+	32,		// 9kw  => 68.2%
+	24,		// 10kw  => 75.8%
+	17,		// 11kw  => 83.3%
+};
+
 static char CarNumEUC_KR[44][2] = 
 {  
  {0xB0,0xA1},{0xB3,0xAA},{0xB4,0xD9},{0xB6,0xF3},  /*�� �� �� ��*/  	
@@ -230,14 +246,86 @@ bool ReadQueueDequeueEnsure(ReadQueue *q, uint8_t* buffer)
 	return true;
 }
 
-
-void StartPwm(ChannelType ch)
+/*
+void SetPwm(uint8_t reqCurr)
 {
-	CtLogGreen("start ch%d pwm with %d Hz and %d duty cycle..\n", ch, CP_PWM_FREQ, CP_PWM_DUTY_CYCLE);
+	uint8_t PwmDuty_tmp = 0;
+
+	if(reqCurr < 6)
+	{   //61851-1 최소 전류값(6A)보다 작음
+		return;
+	}
+	else if(reqCurr < 33)
+	{
+		PwmDuty_tmp = (reqCurr*10) / 6;		// duty = Current / 0.6
+	}
+	else 
+	{  //충전기 최대 전류량(32A) 보다 큼
+		return;
+	}
+
+	PwmDuty_tmp = 100 - PwmDuty_tmp;
+
+	CtLogGreen("start ch%d PWM with %d Hz and %d duty cycle..\n", CP_PWM_FREQ, PwmDuty_tmp);
 
 	ithPwmReset(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);	
 	ithPwmInit(CST_CP0_PWM, CP_PWM_FREQ, 100);
-	ithPwmSetDutyCycle(CST_CP0_PWM, CP_PWM_DUTY_CYCLE);	
+	ithPwmSetDutyCycle(CST_CP0_PWM, PwmDuty_tmp);	
+	ithPwmEnable(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);
+}
+*/
+
+void Powerlimit_current(ChannelType ch, uint16_t curVolt)
+{
+	uint8_t PwmDuty_tmp=0;
+
+	printf("Powerlimit_current ::::: CH[%d] <curVolt : %d> \n", ch, curVolt);
+
+	// PwmDuty_tmp = ((theConfig.chargingstatus * 1000) / (curVolt / 10) / 0.6);
+	PwmDuty_tmp = ((theConfig.chargingstatus * 1000 * 10 * 10) / (curVolt * 6));
+	PwmDuty_tmp = 100 - PwmDuty_tmp;
+
+	if(PwmDuty_tmp <= 40)	PwmDuty_tmp = 47;	//31A
+
+	// 54,		// 6kw => 45.5%
+	// 47,		// 7kw  => 53.3%
+
+	// CtLogGreen("start ch%d PWM with %d Hz and %d duty cycle..\n", CP_PWM_FREQ, PwmDuty_tmp);
+
+	printf("Powerlimit_current ::::: CH[%d] <PwmDuty_tmp : %d> \n", ch, PwmDuty_tmp);
+
+
+#if DEVICE_1007G1
+	ithPwmReset(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);
+	ithPwmInit(CST_CP0_PWM, CP_PWM_FREQ, 100);
+	ithPwmSetDutyCycle(CST_CP0_PWM, PwmDuty_tmp);	//limit 때려박기?
+	ithPwmEnable(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);
+#else 
+	if(ch == CH1)
+	{
+		ithPwmReset(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);
+		ithPwmInit(CST_CP0_PWM, CP_PWM_FREQ, 100);
+		ithPwmSetDutyCycle(CST_CP0_PWM, PwmDuty_tmp);
+		ithPwmEnable(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);
+
+	}
+	else
+	{
+		ithPwmReset(CST_CP1_PWM, CST_GPIO_CP1, ITH_GPIO_MODE2);
+		ithPwmInit(CST_CP1_PWM, CP_PWM_FREQ, 100);
+		ithPwmSetDutyCycle(CST_CP1_PWM, PwmDuty_tmp);
+		ithPwmEnable(CST_CP1_PWM, CST_GPIO_CP1, ITH_GPIO_MODE2);
+	}
+#endif
+}
+
+void StartPwm(ChannelType ch)
+{
+	CtLogGreen("start ch%d pwm with %d Hz and %d duty cycle..\n", ch, CP_PWM_FREQ, CP_PWM_DUTY_TABLE[theConfig.maxPower]);
+
+	ithPwmReset(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);	
+	ithPwmInit(CST_CP0_PWM, CP_PWM_FREQ, 100);
+	ithPwmSetDutyCycle(CST_CP0_PWM, CP_PWM_DUTY_TABLE[theConfig.maxPower]);	
 	ithPwmEnable(CST_CP0_PWM, CST_GPIO_CP0, ITH_GPIO_MODE2);
 }
 

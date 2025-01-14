@@ -239,7 +239,8 @@ typedef enum {
 	END_UNPLUG,
 	END_ERR,
 	END_SERVER,
-	END_CAR
+	END_CAR,
+	END_LIMITERR
 } CHARGE_END_CODE;
 
 typedef enum {

@@ -525,6 +525,12 @@ void ShowFatalErrorDialogBox(unsigned short Ecode)
 		sprintf(title_txt2, STR_TIMER_TIMEOUT_2);
 		ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
 	}
+	else if(Ecode == ERR_OVER_POWER)
+	{
+		sprintf(title_txt1, STR_OVER_POWER_1);
+		sprintf(title_txt2, STR_OVER_POWER_2);
+		ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
+	}
 	else {
 		sprintf(title_txt1, CONNECT_ERR_TXT1);
 		sprintf(title_txt2, CONNECT_ERR_TXT2);

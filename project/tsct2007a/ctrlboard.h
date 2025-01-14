@@ -337,6 +337,7 @@ typedef enum{
 #define ERR_TEMP                    (65)
 #define ERR_LEAK                    (13)
 #define ERR_TIMEOUT                 (10)
+#define ERR_OVER_POWER              (26)
 
 // Event Code
 #define EVENT_CANCEL                 (1)

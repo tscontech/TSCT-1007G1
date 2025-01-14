@@ -28,6 +28,8 @@
 #define LIMIT_OV_VOLT	26400		// +20%
 #define LIMIT_UD_VOLT	19800		// -10%
 #define LIMIT_OV_CURR	3500		// +10%
+
+#define PRICE_LOG_PERIOD_SEC	15
 //-----------------------------------------------------------------------
 // Local Variable
 //-----------------------------------------------------------------------
@@ -70,15 +72,25 @@ static bool sDLsChargeFaultMonitoring = false;
 
 struct timeval stv;
 struct timeval etv;   
-long chargeStart;
-long chargeEnd;
 long sChargeTime;
+// long chargeStart;
+// long chargeEnd;
+static long sChargeStartTime;
+static long sChargeEndTime;
 int charge_stop_btnState[2];
-static int sCh1CurrentZeroTime = 0;
+// static int sCh1CurrentZeroTime = 0;
 
 bool chargecomp_stop; 	// Car Send Charging Stop to Charger
 
 extern bool bAmiErrChk;
+
+//23.10.13
+uint32_t gAmiStartWatt;				// Setting AMI Energy once, when Start Charging.
+uint32_t gAmiChargeWatt;			// Current Charging Energy.
+static bool bChargeStopFlg;     	// Charging Stop Flag (for Preventing Charging Start).
+
+static bool bWaitChargingStopFlg;  	// Car Send Charging Stop to Charger
+time_t stime;  				// Stop Request Time
 
 //-----------------------------------------------------------------------
 // Function
@@ -123,6 +135,110 @@ static void GotoNextLayerOnCharge(void)
 	if(bLayerChargeFlg){
 		ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
 		bLayerChargeFlg = false;
+	}
+}
+
+/**
+ * @brief Get the Charge Price object
+ * 
+ * @return int Return Charge Price
+ */
+int GetChargePrice(void)
+{
+	return charge_price;
+}
+
+/**
+ * @brief Get the Charge Watt object
+ * 
+ * @return uint32_t Return Charge Watt
+ */
+uint32_t GetChargeWatt(void)
+{
+	return charge_watt;
+}
+
+/**
+ * @brief Set the Stop Charging Timer object
+ * 
+ * @param bSet 
+ */
+void SetStopChargingTimer(bool bSet)
+{
+	if(bSet)
+	{	
+		bWaitChargingStopFlg = true;
+		stime = evc_get_time();
+		printf("[SetStopChargingTimer] Start Time = %d\n", stime);
+	}
+	else
+	{
+		bWaitChargingStopFlg = false;
+		printf("[SetStopChargingTimer] Start StopCharging End =%d\n", (evc_get_time() - stime));
+		stime = 0;
+	}
+}
+
+/**
+ * @brief Check the Stop Charging Timer object
+ * 
+ */
+void CheckStopChargingTimer(void)
+{
+	if(bWaitChargingStopFlg)
+	{
+		if((evc_get_time() - stime) > 59) 	// 1min CP Level 9V Charging
+		{
+			StopCharge();
+			ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
+			shmDataAppInfo.charge_comp_status = END_CAR;	// Charging Stop Req from EV					
+
+			bWaitChargingStopFlg = false;
+		}
+		else
+		{
+			printf("[CP 9V] Wait StopCharging = [%d/60]\n", (evc_get_time() - stime));
+		}
+	}
+}
+
+static int lowCurrent_Average=0, lowCurrent_StartTime=0;
+static void lowCurrent_Check(int CurrentTime, uint16_t nCurrent)
+{
+	// nCurrent = 0.00 * 100;
+	// float
+	// (nCurrent <= 2A) -> 15min STOP
+	// if(nCurrent > 200)	return;
+
+	// lowCurrent_Average = (lowCurrent_Average * 99 + nCurrent) / 100;	//떨어지는 속도가 매우 느림
+	lowCurrent_Average = (lowCurrent_Average * 9 + nCurrent) / 10;
+
+	// printf("lowCurrent_Check ::::: <CurrentTime : %d>, <nCurrent : %d>, <lowCurrent_Average : %d> \n", CurrentTime, nCurrent, lowCurrent_Average);
+
+	// if((lowCurrent_Average <= 500) && (shmDataAppInfo.app_order == APP_ORDER_CHARGING) && CstGetMcstatus(bDevChannel))	//5A Test
+	if((lowCurrent_Average <= 200) && (shmDataAppInfo.app_order == APP_ORDER_CHARGING) && CstGetMcstatus())	//2A, 15min STOP
+	{
+		if(lowCurrent_StartTime == 0)
+		{
+			lowCurrent_StartTime = CurrentTime;
+
+			// printf("lowCurrent_Check ::::: <lowCurrent_StartTime : %d> \n", lowCurrent_StartTime);
+		}
+
+		int lowCurrent_TotalTime = CurrentTime - lowCurrent_StartTime;
+
+		if(lowCurrent_TotalTime > 900)	//900s / 60s = 15min
+		{
+			StopCharge();
+
+			ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
+
+			shmDataAppInfo.charge_comp_status = END_ERR;
+		}
+	}
+	else
+	{
+		lowCurrent_StartTime = 0;
 	}
 }
 
@@ -193,15 +309,15 @@ static void WHMListenerOnCharge(int ch, float current, float volt, uint32_t ener
 {
 	char buf[32];	
 	
-	if(sChargingInfocheck)
-	{
-		if(current < 100.0)
-		{
-			memset(buf, 0, 32);
-			sprintf(buf, "%.1f A", current);
-			ituTextSetString(sEffectiveCurrentText1, buf);
-		}
-	}
+	// if(sChargingInfocheck)
+	// {
+	// 	if(current < 100.0)
+	// 	{
+	// 		memset(buf, 0, 32);
+	// 		sprintf(buf, "%.1f A", current);
+	// 		ituTextSetString(sEffectiveCurrentText1, buf);
+	// 	}
+	// }
 
 	if (gAmiStartWatt == -1)
 	{		
@@ -214,14 +330,15 @@ static void WHMListenerOnCharge(int ch, float current, float volt, uint32_t ener
 		gAmiChargeWatt = (float)energy;
 	}
 
-	CheckCurrentIsZero(CH1, &sCh1CurrentZeroTime, sChargeTime,  current);
+	// CheckCurrentIsZero(CH1, &sCh1CurrentZeroTime, sChargeTime,  current);
 }
 
 static void TimeOutChargeStartWait(void)
 {	
 	unsigned int zero_var = 0;
 		
-	GotoNextLayerOnCharge();
+	// GotoNextLayerOnCharge();
+	ShowInfoDialogBox(EVENT_TIMEOUT_CHARGE);
 }
 
 static void CardReaderListenerOnCharging(char *data, int size)
@@ -274,6 +391,7 @@ static void CardReaderListenerOnCharging(char *data, int size)
 	}
 }
 
+#if 0
 static void* sChargeMonitoringTaskFuntion(void* arg)
 {
 	char title[32];
@@ -283,6 +401,7 @@ static void* sChargeMonitoringTaskFuntion(void* arg)
 	unsigned int kwch1_2 = 0;
 
 	ChannelType activeCh = CstGetUserActiveChannel();	
+	uint16_t currbuf;
 	
 	// in case of Cable type charger.
 	if((theConfig.devtype == BC_TYPE) || (theConfig.devtype == HBC_TYPE) \ 
@@ -368,6 +487,7 @@ static void* sChargeMonitoringTaskFuntion(void* arg)
 		ituTextSetString(sEffectiveCurrentText, buf);
 		//충전??금
 
+		//TODO: float 연산 제거
 		memset(buf, 0, 32);
 		sprintf(buf, "%.2f kWh",(float)charge_watt/100.0f ); ///mod
 		ituTextSetString(sEnergyUsedText, buf);
@@ -379,6 +499,10 @@ static void* sChargeMonitoringTaskFuntion(void* arg)
 			sprintf(buf, "%02d:%02d", hour, minute);
 			ituTextSetString(sChargeTimeText, buf);				
 		}
+
+		memset(buf, 0, 32);
+		sprintf(buf, "%d.%d A", currbuf/100, (currbuf/10)%10);
+		ituTextSetString(sEffectiveCurrentText1, buf);
 
 		if(/*bChkCardRxFlg && */(CsConfigVal.bReqAuthNo == false)){
 			if(!memcmp(PId_no2, CsConfigVal.parentId, sizeof(CsConfigVal.parentId)))
@@ -429,6 +553,121 @@ static void* sChargeMonitoringTaskFuntion(void* arg)
 	}
 	sChargeMonitoringTask = 0;
 }
+#endif
+
+
+static void* sChargeMonitoringTaskFuntion(void* arg)
+{
+	int hour=0, minute=0, second=0;		// Charging Time Value
+	int pricepollCount = 0;
+	uint16_t currbuf;
+
+	char buf[32];
+	uint8_t dbgcnt = 0;
+
+	while(sDLsChargeMonitoring)
+	{
+		sleep(1);
+
+		if(shmDataAppInfo.app_order == APP_ORDER_CHARGING && sCharging)
+		{			    
+			gettimeofday(&etv, NULL);
+
+			sChargeStartTime = stv.tv_sec;
+			sChargeEndTime = etv.tv_sec;	
+			sChargeTime = sChargeEndTime - sChargeStartTime;
+				
+			hour = sChargeTime / 3600;
+			minute = (sChargeTime % 3600) / 60;
+			second = sChargeTime % 60;
+							
+			pricepollCount %= 8;
+			if (pricepollCount == 0)	
+			{	
+				#if USE_CREDIT
+				iUnitprice = charge_time_price(true);
+				#else
+				iUnitprice = charge_time_price(false);
+				#endif
+			}								   
+		   charge_watt = gAmiChargeWatt - gAmiStartWatt;
+
+			if(charge_watt < 0)		charge_watt = 0;	
+			
+			charge_price = charge_watt * iUnitprice / 100; 	//
+				
+			if((dbgcnt++) > PRICE_LOG_PERIOD_SEC)
+			{
+				printf("\n\n[ENERGY]======= ch%d energy used: %d -> %d (%d)", bDevChannel, gAmiStartWatt, gAmiChargeWatt, charge_watt);
+				printf("\n[PRICE]========== price: %d ===========\n\n", charge_price);
+				dbgcnt = 0;
+			}
+
+			char temp[6+1] = "";
+			sprintf(temp, "%02d%02d%02d", hour, minute, second);
+			
+			shmDataAppInfo.charge_provide_time[0] = temp[0] << 4;
+			shmDataAppInfo.charge_provide_time[0] |= (temp[1] &= 0x0F);
+			shmDataAppInfo.charge_provide_time[1] = temp[2] << 4;;
+			shmDataAppInfo.charge_provide_time[1] |= (temp[3] &= 0x0F);
+			shmDataAppInfo.charge_provide_time[2] = temp[4] << 4;
+			shmDataAppInfo.charge_provide_time[2] |= (temp[5] &= 0x0F);
+
+			ValueOrderFourByte(shmDataAppInfo.eqp_watt, gAmiChargeWatt);
+			ValueOrderFourByte(shmDataAppInfo.charge_watt, charge_watt);
+			ValueOrderFourByte(shmDataAppInfo.charge_money, charge_price);
+
+			CstSetUsedEnergy(charge_watt, sChargeTime);
+			
+			pricepollCount++;
+		}
+
+		CheckStopChargingTimer();
+
+		currbuf = TSCTGetAMICurrent();
+
+		// CheckCurrentIsZero(&sCurrentZeroTime, sChargeTime, currbuf);
+		lowCurrent_Check(sChargeTime, currbuf);
+
+		if(theConfig.OperationMode == OP_FREE_MODE \
+		&& theConfig.FreeChargingTime != 0	\
+		&& sChargeTime/60 >= theConfig.FreeChargingTime){
+			StopCharge();
+			ituLayerGoto(ituSceneFindWidget(&theScene, "ch2FinishLayer"));
+		}
+
+		memset(buf, 0, 32);
+		sprintf(buf, "%d.%02d %s", iUnitprice/100, iUnitprice%100, STR_PRICE_WON);
+		ituTextSetString(sUnitPricetxt, buf);
+
+		memset(buf, 0, 32);
+		sprintf(buf, "%d %s", charge_price/100, STR_PRICE_WON); ///mod (추후 프로토콜 전송 값 확인)
+		ituTextSetString(sEffectiveCurrentText, buf);
+		//충전??금
+
+		memset(buf, 0, 32);
+		sprintf(buf, "%.2f kWh",(float)charge_watt/100.0f ); ///mod
+		ituTextSetString(sEnergyUsedText, buf);
+		//충전??
+		
+		memset(buf, 0, 32);
+		sprintf(buf, "%02d:%02d", hour, minute);
+		ituTextSetString(sChargeTimeText, buf);	
+	
+		memset(buf, 0, 32);
+		sprintf(buf, "%d.%d A", currbuf/100, (currbuf/10)%10);
+		ituTextSetString(sEffectiveCurrentText1, buf);
+
+		#if USE_SECC
+		if(	SeccTxData.status_fault & (1<<SECC_STAT_STOP)) {
+			CtLogRed("Charge Stop by SECC [%lu]", SeccTxData.status_fault);
+			TSCT_ChargingStop();
+		}
+		#endif
+			
+	}
+	sChargeMonitoringTask = 0;
+}
 void TSCT_ChargingStop()
 {
 	MagneticContactorOff();
@@ -443,10 +682,39 @@ void TSCT_ChargingStop()
 	shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;						
 	GotoNextLayerOnCharge();
 }
+
+/*
+static bool CheckChrgPwr(uint16_t chrgCurr, uint16_t chrgVolt, uint8_t currLmtFlg)
+{
+	uint32_t currChrgPwrW = 0;
+
+	currChrgPwrW = (uint32_t)(chrgCurr * chrgVolt) / 1000;
+
+	if(currLmtFlg)
+		return false;
+	if(currChrgPwrW > (uint32_t)(theConfig.chargingstatus * 1000))
+		return true;
+	else
+		return false;		
+}
+*/
+
 static void ChargeFaultMonitoringTaskFuntion(void *arg)
 {
-	uint8_t Fault_Count[3] = {0,};						// [0]:Over Current, [1]:Over Voltage, [2]:Under Voltage
-	uint16_t chk_Current = 0, chk_Volt = 0;
+	uint8_t Fault_Count[6] = {0,};						// [0]:Over Current, [1]:Over Voltage, [2]:Under Voltage, [3]:Over Temperture, [4]: Over Power Limit(Cut down), [5]: Over Power Limit(Stop Charging)
+	uint16_t limit_over_current=0, chk_Current=0, chk_Volt=0, LimitVolt_Average=0;
+	uint32_t limit_over_power=0, chk_Power=0;
+
+	uint8_t currLmtFlg=false;	//x?
+	uint8_t currLmtAmp = 30;	//x?
+
+	bool Power_Fault_Packet=false;
+
+	// uint_fast8_t checkerTick = 0;
+
+	limit_over_current = (uint16_t)theConfig.chargingstatus * 500;
+	limit_over_power = (uint32_t)theConfig.chargingstatus * 1000;
+
 	while(sDLsChargeFaultMonitoring)
 	{
 		sleep(1);
@@ -467,12 +735,22 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		chk_Current = TSCTGetAMICurrent();
 		chk_Volt = TSCTGetAMIVolt();
 
-		if(chk_Current > LIMIT_OV_CURR)	Fault_Count[0]++;	
+		if(chk_Current > limit_over_current)	Fault_Count[0]++;	
 		else	Fault_Count[0] = 0;
 		if(chk_Volt > LIMIT_OV_VOLT)	Fault_Count[1]++;	
 		else	Fault_Count[1] = 0;
 		if(chk_Volt < LIMIT_UD_VOLT)	Fault_Count[2]++;	
 		else	Fault_Count[2] = 0;
+		if(ChargerTemperate > 80)		Fault_Count[3]++;
+		else	Fault_Count[3] = 0;
+
+		if(chk_Power > limit_over_power) Fault_Count[4]++;
+		else Fault_Count[4] = 0;
+
+		// if(CheckChrgPwr(chk_Current, chk_Volt, currLmtFlg)) Fault_Count[4]++;
+		// else	Fault_Count[4] = 0;
+		// if(currLmtFlg && (chk_Current > (uint16_t)((currLmtAmp+1) * 100))) Fault_Count[5]++;		// 설정 전류의 3% 초과해서 전류 가져가는 차량 존재
+		// else	Fault_Count[5] = 0;		
 		
 		if(Fault_Count[0] > 10){ 
 			CtLogRed("Charge Over Current Fault!!!!!!!!!!!!!!!!!!!");
@@ -504,7 +782,43 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 			ShowWhmErrorDialogBox(ERR_UD_VOLT);
 			// EventCode_buf |= 1 << EVE_UDV;
 		}
-		//TODO: v1.4.0 전력제한 추가
+		if(Fault_Count[3] > 5){
+			CtLogRed("Over Temperatrue Error!!!!!!!!!!!!!!!!!!!");		
+			sDLsChargeFaultMonitoring = 0;
+			Fault_Count[0] = 0;
+			Fault_Count[1] = 0;
+			Fault_Count[2] = 0;
+			Fault_Count[3] = 0;
+			shmDataAppInfo.charge_comp_status = END_ERR;
+			CstSetEpqStatus(TSCT_OVER_TEMP, false);
+			ShowWhmErrorDialogBox(ERR_TEMP);
+			// EventCode_buf |= 1 << EVE_TEMP;			
+		}
+
+		if(Fault_Count[4] > 5)	//변화되는 시간만큼
+		{
+			// CtLogRed("Over Setting Power!! Current %u A / Volt %u V !!!!!!!!", chk_Current, chk_Volt);
+
+			// currLmtFlg = true;
+
+			if(theConfig.forcePowerLimit) // v1.4.1 - 강제전력제한 기능 ON/OFF  24.10.25 JGLEE
+			{
+				// test here
+				// SetPwm(29);
+				Powerlimit_current(bDevChannel, LimitVolt_Average);
+			}
+
+			if(!Power_Fault_Packet)
+			{
+				Power_Fault_Packet = true;
+
+				CstSetEpqStatus(TSCT_OVER_POWER, false);
+				// EventCode_buf |= 1 << EVE_OVP;
+			}
+
+			Fault_Count[4] = 0;
+		}
+
 		//CtLogYellow("ChargeFault Cnt : %d / Current : %d, Volt : %d ", Fault_Count, chk_Current, chk_Volt);
 	}
 	sChargeFaultMonitoringTask = 0;
@@ -552,6 +866,7 @@ void StopCharge(void)
 		ituWidgetSetVisible(swaitTextIcon, false);
 		//ituWidgetSetVisible(schargingTextIcon, true);		
 	}	
+	shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;	
 	ituSpriteGoto(sChargeSprite, 0);
 	LEDStopBlink();
 	TopHomeBtnVisible(false);
@@ -639,6 +954,8 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 		case CP_VOLTAGE_9V:
 			if (sCharging)
 			{ 	
+				SetStopChargingTimer(true);
+				shmDataAppInfo.app_order = APP_ORDER_CHARGE_READY;
 				if(CstGetMcstatus())
 				{	
 					MagneticContactorOff();	
@@ -674,6 +991,7 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 						chargecomp_stop = false;
 						MagneticContactorOn();
 						StartStopCharging(0, ch);
+						SetStopChargingTimer(false);
 					}
 				}
 			}
@@ -745,7 +1063,7 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 	hour=0; minute=0; second=0;
 	sCharging = false;
 	sChargeTime = 0;
-	sCh1CurrentZeroTime = 0;
+	// sCh1CurrentZeroTime = 0;
 	gAmiChargeWatt = -1;
 	gAmiStartWatt = -1;
 	charge_stop_btnState[bDevChannel] = 0;
@@ -929,6 +1247,9 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 
 bool ChargeOnLeave(ITUWidget* widget, char* param)
 {	
+	SetStopChargingTimer(true);
+	StopCharge();
+	
 	char buf[8]={0x30,};
 
 	#if USE_SECC
