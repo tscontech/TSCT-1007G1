@@ -83,11 +83,11 @@ void touchkeyHomePressed(bool longPush)
 	}
 	#endif
 	#if USE_SECC
-	if()
-	{
-		ShowInfoDialogBox(EVENT_WAIT_PLC);
-		return;
-	}
+	// if()
+	// {
+	// 	ShowInfoDialogBox(EVENT_WAIT_PLC);
+	// 	return;
+	// }
 	#endif
 	#if USE_OBD
 	if()

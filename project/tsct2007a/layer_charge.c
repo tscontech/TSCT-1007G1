@@ -1247,7 +1247,7 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 
 bool ChargeOnLeave(ITUWidget* widget, char* param)
 {	
-	SetStopChargingTimer(true);
+	SetStopChargingTimer(false);
 	StopCharge();
 	
 	char buf[8]={0x30,};
