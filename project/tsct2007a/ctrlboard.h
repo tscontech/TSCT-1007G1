@@ -1146,7 +1146,8 @@ typedef enum {
    APP_ORDER_CAR_NUMAUTH,		//17 straffic add 190321 _daAn
    APP_ORDER_CANCEL_PREPAY,		// 18 straffic add 190529 _daAn 
    APP_ORDER_ERR_REBOOT,         //19 Error Occure go Reset
-   APP_ORDER_QR_WAIT             //20
+   APP_ORDER_QR_WAIT,             //20
+   APP_ORDER_END,
 }APP_ORDER;
 void PlayVideo(int x, int y, int width, int height, int bgColor, int volume);
 void WaitPlayVideoFinish(void);

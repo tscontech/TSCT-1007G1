@@ -1240,7 +1240,7 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 
 	ConfigSave();
 
-	setTouchKeyListener(touchkeyChargePress);
+	setTouchKeyListener(touchkeyChargePress, APP_ORDER_CHARGING);
 
     return true;
 }
@@ -1341,7 +1341,7 @@ bool ChargeOnLeave(ITUWidget* widget, char* param)
 	CsConfigVal.bReqAuthNo = false;
 	CardReaderStopMonitoring();
 	
-	setTouchKeyListener(NULL);
+	// setTouchKeyListener(NULL);
 
 	usleep(200*1000);
 	CtLogRed("Leave charge layer\n");	

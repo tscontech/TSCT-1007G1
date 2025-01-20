@@ -192,7 +192,7 @@ bool remoteOnEnter(ITUWidget* widget, char* param)
 
     TopSetTimer(REMOTE_TIMEOUT, QRTimerTimeout);
 
-    setTouchKeyListener(touchkeyQRPressed);
+    setTouchKeyListener(touchkeyQRPressed, APP_ORDER_QR_WAIT);
 
     return true;
 }
@@ -209,7 +209,7 @@ bool QRCancelOnPress(ITUWidget* widget, char* param)
 
 bool remoteOnLeave(ITUWidget* widget, char* param)
 {
-    setTouchKeyListener(NULL);
+    // setTouchKeyListener(NULL);
     TopCloseTimer();
     sDLsWaitQRMonitoring = false;
     //sWaitQRMonitoringTask = NULL;

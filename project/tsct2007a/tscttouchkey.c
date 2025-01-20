@@ -16,56 +16,18 @@ void dummyListener(bool longPush);
 TouchKeyListener privilegedListener;
 uint32_t lastPush;
 pthread_t touchKeyTaskID;
-TouchKeyListener listenerStack[TOUCHKEY_LISTENER_STACK_SIZE+1] = {dummyListener, };
-uint8_t listenerStackTop = 0;
+TouchKeyListener listenerArray[APP_ORDER_END] = {dummyListener, };
 
-bool MCStatus;
 
 void dummyListener(bool longPush)
 {
     printf("[TOUCHKEY] Dummy Listener Run! longPush = %d\n", longPush);
 }
 
-void pushTouchKeyListener(TouchKeyListener l)
+void setTouchKeyListener(TouchKeyListener l, APP_ORDER appOrder)
 {
-    if(l != NULL)
-    {
-        if(listenerStackTop == TOUCHKEY_LISTENER_STACK_SIZE)
-        {
-            CtLogRed("[TOUCHKEY] pushTouchKeyListener - Listener Stack is Full!!!\n");
-            return;
-        }
-        ++listenerStackTop;
-        listenerStack[listenerStackTop] = l;
-        printf("[TOUCHKEY] New Listener Pushed! %p\n", l);
-    }
-}
-
-TouchKeyListener popTouchKeyListener()
-{
-    TouchKeyListener ret;
-    if(listenerStackTop == 0)
-    {
-        CtLogRed("[TOUCHKEY] popTouchKeyListener - Listener Stack is Empty!!!\n");
-        return;
-    }
-    ret = listenerStack[listenerStackTop];
-    listenerStack[listenerStackTop] = NULL;
-    --listenerStackTop;
-    printf("[TOUCHKEY] Listener Popped! %p\n", ret);
-
-    return ret;
-}
-
-void setTouchKeyListener(TouchKeyListener l)
-{
-    // if(l != NULL) listener = l;
-    // else listener = dummyListener;
-    // printf("[TOUCHKEY] New Listener Set! %p\n", l);
-
-    if(l != NULL) pushTouchKeyListener(l);
-    else popTouchKeyListener();
-    // printf("[TOUCHKEY] New Listener Set! %p\n", l);
+    if(listenerArray[appOrder] == NULL)
+        listenerArray[appOrder] = l;
 }
 
 void setPrivilegedTouchKeyListener(TouchKeyListener l)
@@ -106,16 +68,14 @@ void touchKeyTask(void)
                 else if(lastPush >= TOUCHKEY_LONG_PUSH_TIME)
                 {//long push
                     printf("[TOUCHKEY] Long Touch! %d\n", lastPush);
-                    // listener(true);
                     if(privilegedListener) privilegedListener(true);
-                    else listenerStack[listenerStackTop](true);
+                    else listenerArray[shmDataAppInfo.app_order](true);
                 }
                 else
                 {//short push
                     printf("[TOUCHKEY] Short Touch! %d\n", lastPush);
-                    // listener(false); 
                     if(privilegedListener) privilegedListener(false);
-                    else listenerStack[listenerStackTop](false);
+                    else listenerArray[shmDataAppInfo.app_order](false);
                 }
 
                 lastPush = 0;

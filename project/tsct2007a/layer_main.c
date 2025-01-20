@@ -296,7 +296,7 @@ bool MainOnEnter(ITUWidget* widget, char* param)
     // sTriggerBtn = ituSceneFindWidget(&theScene, "triggerButton");
     // assert(sTriggerBtn);
 	
-	setTouchKeyListener(touchkeyHomePressed);
+	setTouchKeyListener(touchkeyHomePressed, APP_ORDER_WAIT);
 	hookKeyboard(keyboardOnMain);
 
 	// For PWM Test
@@ -308,7 +308,7 @@ bool MainOnEnter(ITUWidget* widget, char* param)
 
 bool MainOnLeave(ITUWidget* widget, char* param)
 {
-	setTouchKeyListener(NULL);
+	// setTouchKeyListener(NULL);
 	hookKeyboard(NULL);
 	SetHomeLayer(false);
 	CtLogRed("Exit Main Layer %d", bHomeLayerChk);    

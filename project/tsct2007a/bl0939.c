@@ -616,7 +616,7 @@ static void* BLTask(void* arg)
 void touchToRecoverEMB(bool longpress)
 {
     EMBListenerOnCharge12(false);
-    setTouchKeyListener(NULL);
+    // setTouchKeyListener(NULL);
 }
 
 void BL0939LeakInterrupt(unsigned int pin, void *arg);

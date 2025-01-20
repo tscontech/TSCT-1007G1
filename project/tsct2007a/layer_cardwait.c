@@ -259,7 +259,7 @@ bool CardWaitEnter(ITUWidget* widget, char* param)
 	//TODO: 10초 지났을 때 지연 안내 어떻게 보내지...?
 	TopSetTimer(30, CardAuth1Timer1);
 
-	setTouchKeyListener(touchkeyCreditCardPressed);
+	setTouchKeyListener(touchkeyCreditCardPressed, APP_ORDER_CUSTOMER_AUTH);
 	
     return true;
 }
@@ -281,7 +281,7 @@ bool CardWaitLeave(ITUWidget* widget, char* param)
 	TopStopStepAnimation();
 	sleep(1);
 
-	setTouchKeyListener(NULL);
+	// setTouchKeyListener(NULL);
 	
     return true;
 }
