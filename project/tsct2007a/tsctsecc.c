@@ -81,6 +81,11 @@ size_t rebootCnt = 0;
 
 static void* SeccRS232ReadTask(void* arg);
 
+bool checkSECC()
+{  
+	return rebootCnt == 0 && SeccInitStep == SECC_INIT_STEP_DONE;
+}
+
 /**
  * @brief Little Endian Data => Big Endian Data (16bit) 
  */

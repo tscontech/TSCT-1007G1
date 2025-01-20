@@ -224,5 +224,6 @@ SECC_CHRG_STEP SeccChrgStep;
 #define SECC_MODE_FALLBACK              2
 #define SECC_MODE_NOMINAL               3
 
+bool checkSECC();
 
 #endif
