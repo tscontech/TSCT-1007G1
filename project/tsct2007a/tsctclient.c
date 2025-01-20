@@ -404,8 +404,9 @@ static short CstCopyByte(char *pDst, char *pSrc, int length)
 	return result;
 }
 
-static void NetWrite(int ch, const bool response)
+static bool NetWrite(int ch, const bool response)
 {
+	bool ret_func;
 	int index = 0;
 	unsigned int n;
 
@@ -449,15 +450,23 @@ static void NetWrite(int ch, const bool response)
 			if(gSockfd > 0)
 				bConnect = false;
 			printf(" [%d] Socket Error !!! ret %d ==> socket close... and try to re-connect !!!\n", ch, ret);
-		}
 
+			ret_func = false;
+		}
+		else 
+			ret_func = true;
 		
 		DumpMsg("Send Packet", ch, index, send_buf);
 	}
+	else 
+		ret_func = false;
+
+	return ret_func;
 }
 
-static void MakeData(int ch, const unsigned short cmd)
+static bool MakeData(int ch, const unsigned short cmd)
 {
+	bool ret;
     bool bCmdErr = false;
 	unsigned char tmp_cmd;
 
@@ -482,49 +491,59 @@ static void MakeData(int ch, const unsigned short cmd)
 		bBlocking = (cmd >> 8) - 0x60;
 		ResetRespon(60*1000);
 	}
-	if(ch == CH1)
+
+	switch(cmd)
 	{
-	    switch(cmd)
-	    {
-		    case CMD_a1: 	        MakeDataCmd_a1(CH1);        break;
-		    case CMD_b1: 	        MakeDataCmd_b1(CH1);        break;
-		    case CMD_c1: 	        MakeDataCmd_c1(CH1);        break;
-		    case CMD_d1: 	        MakeDataCmd_d1(CH1);        break;
-		    case CMD_e1: 	        MakeDataCmd_e1(CH1);        break;
-		    case CMD_f1: 	        MakeDataCmd_f1(CH1);        break;
-		    case CMD_g1: 	        MakeDataCmd_g1(CH1);        break;
-		    case CMD_h1: 	        MakeDataCmd_h1(CH1);	    break;
-		    case CMD_i1: 	        MakeDataCmd_i1(CH1);	    break;
-		    case CMD_j1: 	        MakeDataCmd_j1(CH1);        break;
-		    case CMD_k1: 	        MakeDataCmd_k1();	        break;
-		    //case CMD_l1: 	        MakeDataCmd_l1();	        break;
-			case CMD_n1: 	        MakeDataCmd_n1();	        break;
-			case CMD_q1:			MakeDataCmd_q1(CH1);	    break;
-			case CMD_q2:			MakeDataCmd_q2(CH1);	    break;
-			case CMD_1C:			MakeDataCmd_1C(ch);			break;
-			case CMD_1F:			MakeDataCmd_1F(ch);			break;
-			case CMD_1I:			MakeDataCmd_1I(ch);			break;
-			case CMD_1K:			MakeDataCmd_1K(ch);			break;
-			case CMD_1N:			MakeDataCmd_1N(ch);			break;
-		    default:
-		        bCmdErr = true;
-	    }
+		case CMD_a1: 	        MakeDataCmd_a1(CH1);        break;
+		case CMD_b1: 	        MakeDataCmd_b1(CH1);        break;
+		case CMD_c1: 	        MakeDataCmd_c1(CH1);        break;
+		case CMD_d1: 	        MakeDataCmd_d1(CH1);        break;
+		case CMD_e1: 	        MakeDataCmd_e1(CH1);        break;
+		case CMD_f1: 	        MakeDataCmd_f1(CH1);        break;
+		case CMD_g1: 	        MakeDataCmd_g1(CH1);        break;
+		// case CMD_h1: 	        MakeDataCmd_h1(CH1);	    break;
+		// case CMD_i1: 	        MakeDataCmd_i1(CH1);	    break;
+		case CMD_j1: 	        MakeDataCmd_j1(CH1);        break;
+		// case CMD_k1: 	        MakeDataCmd_k1();	        break;
+		// case CMD_l1: 	        MakeDataCmd_l1();	        break;
+		// case CMD_n1: 	        MakeDataCmd_n1();	        break;
+		case CMD_q1:			MakeDataCmd_q1(CH1);	    break;
+		case CMD_q2:			MakeDataCmd_q2(CH1);	    break;
+		case CMD_1C:			MakeDataCmd_1C(ch);			break;
+		case CMD_1F:			MakeDataCmd_1F(ch);			break;
+		case CMD_1I:			MakeDataCmd_1I(ch);			break;
+		case CMD_1K:			MakeDataCmd_1K(ch);			break;
+		case CMD_1N:			MakeDataCmd_1N(ch);			break;
+		default:
+			bCmdErr = true;
 	}
 
     if(!bCmdErr)
     { 	
 		txPacket.etx = CTRL_CODE_ETX;
-		NetWrite(ch, true);
+		ret = NetWrite(ch, true);
     }
+	else
+		ret = false;
+
+	return ret;
 }
 
 void MakePacket(int ch, const unsigned short cmd)
 {
+	bool ret;
     memset(&txPacket, 0x00, sizeof(PACKET));
 
     txPacket.stx = CTRL_CODE_STX;
     MakeHeader(ch);
-    MakeData(ch, cmd);
+    ret = MakeData(ch, cmd);
+	if(ret){
+		CstSetEpqStatus(TSCT_IN_OVER_CURRENT, true);
+		CstSetEpqStatus(TSCT_IN_OVER_VOLTAGE, true);
+		CstSetEpqStatus(TSCT_IN_UNDER_VOLTAGE, true);
+		CstSetEpqStatus(TSCT_CONNECT_TIMEOUT, true);
+		CstSetEpqStatus(TSCT_OVER_POWER, true);
+	}
 }
 
 

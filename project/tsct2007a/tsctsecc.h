@@ -69,6 +69,7 @@ typedef enum {
     CSM_STAT_STOPCHRG,
     CSM_STAT_FAILURESTOP,
     CSM_STAT_NARMALSTOP,
+    CSM_STAT_PAUSESESSION = 21,
 } CSM_STAT;
 
 typedef struct  {

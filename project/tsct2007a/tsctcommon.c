@@ -282,7 +282,7 @@ void Powerlimit_current(ChannelType ch, uint16_t curVolt)
 	printf("Powerlimit_current ::::: CH[%d] <curVolt : %d> \n", ch, curVolt);
 
 	// PwmDuty_tmp = ((theConfig.chargingstatus * 1000) / (curVolt / 10) / 0.6);
-	PwmDuty_tmp = ((theConfig.chargingstatus * 1000 * 10 * 10) / (curVolt * 6));
+	PwmDuty_tmp = ((theConfig.maxPower * 1000 * 10 * 10) / (curVolt * 6));
 	PwmDuty_tmp = 100 - PwmDuty_tmp;
 
 	if(PwmDuty_tmp <= 40)	PwmDuty_tmp = 47;	//31A
