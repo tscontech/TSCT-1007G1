@@ -101,6 +101,17 @@ void MagneticContactorOff(void)
 	ithGpioClear(MC_CTRL_NEUTRAL);
 }
 
+void MagneticContactorOffEmergency(void)
+{
+	// printf("[MC#0] Magnetic contactor off\n");
+	
+	ithGpioClear(MC_CTRL_LIVE_R);
+	ithGpioClear(MC_CTRL_NEUTRAL_R);
+	ithGpioClear(MC_CTRL_LIVE);
+	ithGpioClear(MC_CTRL_NEUTRAL);
+	MCOn = false;
+}
+
 bool CstGetMcstatus(void)
 {	
 	return MCOn;
