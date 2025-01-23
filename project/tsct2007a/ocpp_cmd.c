@@ -238,7 +238,7 @@ void MakeDataCmd_Boot(void)
 	memcpy(Tx_Msg.Payload[1].property_name, "chargePointModel",sizeof("chargePointModel"));
 
 	memset(Tx_Msg.Payload[1].property_contants, 0x00, sizeof(Tx_Msg.Payload[1].property_contants));
-	memcpy(Tx_Msg.Payload[1].property_contants, "TSCT-2007CP",sizeof("TSCT-2007CP"));
+	memcpy(Tx_Msg.Payload[1].property_contants, SECC_MODEL,sizeof(SECC_MODEL));
 	Tx_Msg.Payload[0].data_type = TYPE_CODE_STR;
 }
 

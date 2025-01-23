@@ -73,7 +73,8 @@ static void StopConnectSprite(void)
 static void TimeOutPageOut(void)
 {	
 	    ChannelType activeCh = CstGetUserActiveChannel();
-		ShowFatalErrorDialogBox(ERR_TIMEOUT);
+		// ShowFatalErrorDialogBox(ERR_TIMEOUT);
+		ShowInfoDialogBox(EVENT_TIMEOUT_CONN);
 		// ituLayerGoto(ituSceneFindWidget(&theScene, "mainLayer"));  //Error dialog changes layer to main layer.
 }
 

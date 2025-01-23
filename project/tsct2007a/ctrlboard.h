@@ -23,7 +23,7 @@ extern "C" {
 
 #define MAX_ADDRESS     70
 
-// #define USE_SECC 1
+#define USE_SECC 1
 // #define USE_OBD 0
 
 /** @defgroup ctrlboard_audio Audio Player
@@ -323,6 +323,7 @@ typedef enum{
 #define  TSCT_SELF_TEST 			(32)	// Bit[32] self test result  Bad 0, Ok 1
 #define  TSCT_TIMEOUT_SEQUENCY		(36)	// Bit[36] sequency time out Err 0, Ok 1
 
+//TODO: 에러코드 정리하기(윗쪽의 공통 에러코드로 통합시키기기)
 // Error Code
 #define ERR_SERVER_DISCON           (0)     // Server Disconnect 
 #define ERR_AMI_DISCON              (2)     // AMI Disconnect
@@ -333,8 +334,26 @@ typedef enum{
 #define ERR_TOUCH                   (62)
 #define ERR_RFID                    (63)
 #define ERR_AMI                     (64)
+#define ERR_TEMP                    (65)
 #define ERR_LEAK                    (13)
 #define ERR_TIMEOUT                 (10)
+#define ERR_OVER_POWER              (26)
+
+// Event Code
+#define EVENT_CANCEL                 (1)
+#define EVENT_FAILED_AUTH_RFID       (2)
+#define EVENT_FAILED_AUTH_CREDIT     (3)
+#define EVENT_TIMEOUT_TIMER          (11)
+#define EVENT_TIMEOUT_CONN           (12)
+#define EVENT_TIMEOUT_CHARGE         (13)
+#define EVENT_WAIT_SERVER            (21)
+#define EVENT_WAIT_AMI               (22)
+#define EVENT_WAIT_RFID              (23)
+#define EVENT_WAIT_CREDIT            (24)
+#define EVENT_WAIT_PLC               (25)
+#define EVENT_WAIT_OBD               (26)
+#define EVENT_WAIT_BL                (27)
+
 
 /* v1.4.0
 #define ERR_SERVER_DISCON           (0)     // Server Disconnect 
@@ -394,6 +413,7 @@ typedef struct
     unsigned char charge_start_time[7];               // Charge Starting Time
     MEM_TYPE member_type;			   		        // using meber type
     
+    uint32_t 	  secure_no[2];						// 원격 인증 번호
 }SHM_DATA_APP_INFO;
 
 typedef struct 
@@ -516,11 +536,13 @@ typedef enum
  */
 typedef enum
 {
-    USER_AUTH_NONE = 0, // 0: ????.
-    USER_AUTH_NET,   	// 1: server
-    USER_AUTH_CARD,		// 2: card
-    USER_AUTH_PASSWORD,	// 3: button
-	USER_AUTH_MAX		// 4: 
+    USER_AUTH_NONE = 0,     // 0: ????.
+    USER_AUTH_NET,          // 1: server
+    USER_AUTH_CARD,         // 2: card
+    USER_AUTH_PASSWORD,  	// 3: button
+    USER_AUTH_NET_QR,       // 4: server + qr
+    USER_AUTH_NET_REMOTE,   // 5: server + remote
+	USER_AUTH_MAX           // 6: 
 } UserAuthType;
 
 typedef struct
@@ -579,6 +601,10 @@ CREDIT_PAY_STRUCT credit_Pay[2];
 SHM_DATA_IF_INFO shmDataIfInfo;
 
 SHM_DATA_APP_INFO shmDataAppInfo;
+
+int ChargerTemperate;
+int ChargerHumidity;
+
 bool EmgControl; // 모든 동작을 정지 시키고 대기 화면으로 이동 시킨다. 충전중에는 뒤로 가서 대기 화면으로 간다.
 bool sleepOnCheck;
 bool sleepOn1chCheck;
@@ -1119,7 +1145,9 @@ typedef enum {
    APP_ORDER_FINISH,            //16
    APP_ORDER_CAR_NUMAUTH,		//17 straffic add 190321 _daAn
    APP_ORDER_CANCEL_PREPAY,		// 18 straffic add 190529 _daAn 
-   APP_ORDER_ERR_REBOOT         //19 Error Occure go Reset
+   APP_ORDER_ERR_REBOOT,         //19 Error Occure go Reset
+   APP_ORDER_QR_WAIT,             //20
+   APP_ORDER_END,
 }APP_ORDER;
 void PlayVideo(int x, int y, int width, int height, int bgColor, int volume);
 void WaitPlayVideoFinish(void);

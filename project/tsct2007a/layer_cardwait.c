@@ -60,7 +60,8 @@ void WaitToStartLayer(void)
 	if(GotoWaittoStartLayer)
 	{
 		GotoWaittoStartLayer = false;
-		GotoStartLayer();
+		// GotoStartLayer();
+		ShowInfoDialogBox(EVENT_TIMEOUT_TIMER);
 	}
 }
 
@@ -140,8 +141,9 @@ static void* sWaitMonitoringTaskFuntion(void* arg)
 				ituWidgetSetVisible(scardWaiticon_fail, true);
 				ituWidgetSetVisible(scardWaitTxtIcon_fail, true);
 
-				sleep(1);				
-				WaitToStartLayer();
+				sleep(1);			
+				ShowInfoDialogBox(EVENT_FAILED_AUTH_RFID);
+				// WaitToStartLayer();
 			}									
 		}
 		else
@@ -254,9 +256,10 @@ bool CardWaitEnter(ITUWidget* widget, char* param)
 		pthread_detach(sWaitMonitoringTask);
 	}	
 
+	//TODO: 10초 지났을 때 지연 안내 어떻게 보내지...?
 	TopSetTimer(30, CardAuth1Timer1);
 
-	setTouchKeyListener(touchkeyCreditCardPressed);
+	setTouchKeyListener(touchkeyCreditCardPressed, APP_ORDER_CUSTOMER_AUTH);
 	
     return true;
 }
@@ -278,7 +281,7 @@ bool CardWaitLeave(ITUWidget* widget, char* param)
 	TopStopStepAnimation();
 	sleep(1);
 
-	setTouchKeyListener(NULL);
+	// setTouchKeyListener(NULL);
 
 	BuzzerBeep();
 	

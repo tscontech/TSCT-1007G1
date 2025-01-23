@@ -100,40 +100,40 @@ void EMBListenerOnCharge12(bool pressed)
 	}
 }
 
-static void* sOrderSequenceMonitoringTaskFuntion(void* arg)
-{
-	while(sDLsOrderSequenceMonitoring)
-	{
-		usleep(200*1000);	
+// static void* sOrderSequenceMonitoringTaskFuntion(void* arg)
+// {
+// 	while(sDLsOrderSequenceMonitoring)
+// 	{
+// 		usleep(200*1000);	
 		
-		// for LED Control, when idle status
-		if(!EmgControl && !bGloAdminStatus && (screenOff == false))
-		{
-			if(shmDataAppInfo.app_order < APP_ORDER_AUTH_METHOD) LEDOff();	
-		}	
+// 		// for LED Control, when idle status
+// 		if(!EmgControl && !bGloAdminStatus && (screenOff == false))
+// 		{
+// 			if(shmDataAppInfo.app_order < APP_ORDER_AUTH_METHOD) LEDOff();	
+// 		}	
 			
-		if(chargecomp_stop)
-		{
-			if((evc_get_time() - stime) > 59) 	// 1min CP Level 6V Charging
-			{
-				shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
-				StopCharge();
-				UpdateStopGui(); 
-				shmDataAppInfo.charge_comp_status = END_CAR;	// Charging Stop Req from EV					
+// 		if(chargecomp_stop)
+// 		{
+// 			if((evc_get_time() - stime) > 59) 	// 1min CP Level 6V Charging
+// 			{
+// 				shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
+// 				StopCharge();
+// 				UpdateStopGui(); 
+// 				shmDataAppInfo.charge_comp_status = END_CAR;	// Charging Stop Req from EV					
 
-				chargecomp_stop = false;
-			}
-			else
-			{
-				printf("[SM3 ch1] Wait StopCharging =%d\n", (evc_get_time() - stime));
-			}
+// 				chargecomp_stop = false;
+// 			}
+// 			else
+// 			{
+// 				printf("[SM3 ch1] Wait StopCharging =%d\n", (evc_get_time() - stime));
+// 			}
 
-			sleep(1);
-		}
-	}
-	sDLsOrderSequenceMonitoring = false;
-	sOrderSequenceMonitoringTask = 0;
-}
+// 			sleep(1);
+// 		}
+// 	}
+// 	sDLsOrderSequenceMonitoring = false;
+// 	sOrderSequenceMonitoringTask = 0;
+// }
 
 void OderSequenceInit(void)
 {	
@@ -146,13 +146,13 @@ void OderSequenceInit(void)
 	
 	EmergencyButtonStartMonitoring(EMBListenerOnCharge12);
 	
-	if (sOrderSequenceMonitoringTask == 0)
-	{
-		sDLsOrderSequenceMonitoring = true;
-		pthread_create(&sOrderSequenceMonitoringTask, NULL, sOrderSequenceMonitoringTaskFuntion, NULL);
-		pthread_detach(sOrderSequenceMonitoringTask);
-	}		
-	printf("[Debug] OderSequenceInit..  Start  \n");	
+	// if (sOrderSequenceMonitoringTask == 0)
+	// {
+	// 	sDLsOrderSequenceMonitoring = true;
+	// 	pthread_create(&sOrderSequenceMonitoringTask, NULL, sOrderSequenceMonitoringTaskFuntion, NULL);
+	// 	pthread_detach(sOrderSequenceMonitoringTask);
+	// }		
+	// printf("[Debug] OderSequenceInit..  Start  \n");	
 	
 }
 

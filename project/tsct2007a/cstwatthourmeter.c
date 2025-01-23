@@ -45,7 +45,7 @@ static AMIDATA amidata;
 
 bool bAmiStartFlg = false;
 bool bAmiErrChk = true;
-uint32_t ipositiveActiveEnergy=0;
+uint32_t ipositiveActiveEnergy=-1;  //최초 통신 전 = -1, 최초 통신 후 >= 0
 uint16_t gcurrent =0;
 uint16_t gvolt=0;
 uint32_t gwattx=0;
@@ -163,6 +163,18 @@ static bool RequestValueNew(int ch) {
 	uint16_t size = 0 , findstart=0;
 	uint16_t volt;
 	unsigned int booting_ser_int = 0;
+
+	//Check MC ON 25.01.13 JGLEE
+	if(CstGetMcstatus() == false)
+	{
+		gcurrent = 0;
+		// gvolt = 0;
+		printf( "[AMI] AMI OFF !!!! errcnt:%d\r\n", amidata.sRS485errors++);
+		if (amidata.sWhmListener != NULL)
+			(*amidata.sWhmListener)(ch, current, volt, ipositiveActiveEnergy);
+
+		return false;
+	}
 
     EM2P_REQ[0] = 0;
     EM2P_REQ[1] = 3;

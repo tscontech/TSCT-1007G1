@@ -44,7 +44,6 @@ void touchkeyHomePressed(bool longPush)
 	// 	MagneticContactorOff();
 	// else 
 	// 	MagneticContactorOn();
-	GotoNextAuthLayer(AUTH_WAIT_LAYER);
 
 	// if(sPLCOn == false)
 	// {
@@ -58,6 +57,52 @@ void touchkeyHomePressed(bool longPush)
 	// }
 
 	//powerControlPLC(longPush);
+
+
+	// if(GetServerCon() == false)
+	// {
+	// 	ShowInfoDialogBox(EVENT_WAIT_SERVER);
+	// 	return;
+	// }
+	// if(GetMeterCon() == false)
+	// {
+	// 	ShowInfoDialogBox(EVENT_WAIT_AMI);
+	// 	return;
+	// }
+	if(RFIDCardReaderCheck() == true)  // false means no issue (success)
+	{
+		ShowInfoDialogBox(EVENT_WAIT_RFID);
+		return;
+	}
+	//Remove condition if credit source is added and have a way to check
+	#if USE_CREDIT
+	if()
+	{
+		ShowInfoDialogBox(EVENT_WAIT_CREDIT);
+		return;
+	}
+	#endif
+	#if USE_SECC
+	if(checkSECC() == false)
+	{
+		ShowInfoDialogBox(EVENT_WAIT_PLC);
+		return;
+	}
+	#endif
+	#if USE_OBD
+	if()
+	{
+		ShowInfoDialogBox(EVENT_WAIT_OBD);
+		return;
+	}
+	#endif
+	if(BL0939Check() == false)
+	{
+		ShowInfoDialogBox(EVENT_WAIT_BL);
+		return;
+	}
+
+	GotoNextAuthLayer(AUTH_WAIT_LAYER);
 
 	return;
 }
@@ -251,7 +296,7 @@ bool MainOnEnter(ITUWidget* widget, char* param)
     // sTriggerBtn = ituSceneFindWidget(&theScene, "triggerButton");
     // assert(sTriggerBtn);
 	
-	setTouchKeyListener(touchkeyHomePressed);
+	setTouchKeyListener(touchkeyHomePressed, APP_ORDER_WAIT);
 	hookKeyboard(keyboardOnMain);
 
 	// For PWM Test
@@ -263,7 +308,7 @@ bool MainOnEnter(ITUWidget* widget, char* param)
 
 bool MainOnLeave(ITUWidget* widget, char* param)
 {
-	setTouchKeyListener(NULL);
+	// setTouchKeyListener(NULL);
 	hookKeyboard(NULL);
 	SetHomeLayer(false);
 	CtLogRed("Exit Main Layer %d", bHomeLayerChk);    

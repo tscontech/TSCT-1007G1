@@ -12,6 +12,7 @@
 
 void MagneticContactorOn(void);
 void MagneticContactorOff(void);
+void MagneticContactorOffEmergency(void);
 
 #endif
 

@@ -1,20 +1,27 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Barebone",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "uint8_t=unsigned char",
+                "uint16_t=unsigned short",
+                "uint32_t=unsigned long",
+                "uint64_t=unsigned long long",
+                "int8_t=signed char",
+                "int16_t=signed short",
+                "int32_t=signed long",
+                "int64_t=signed long long"
             ],
-            "windowsSdkVersion": "10.0.19041.0",
-            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.32.31326/bin/Hostx64/x64/cl.exe",
-            "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "windows-msvc-x64"
+            "compilerPath": "C:/ITEGCC/bin/arm-none-eabi-gcc.exe",
+            "cStandard": "c99",
+            "cppStandard": "c++98",
+            "intelliSenseMode": "linux-gcc-arm"
         }
     ],
     "version": 4

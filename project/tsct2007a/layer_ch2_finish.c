@@ -135,7 +135,7 @@ bool Ch2FinishOnEnter(ITUWidget* widget, char* param)
 
 	sleep(1);	//for Send CP FInish STatus msg	to CSMS
 
-	setTouchKeyListener(touchkeyFinishPressed);
+	setTouchKeyListener(touchkeyFinishPressed, APP_ORDER_CHARGING_STOP);
 
     return true;
 }
@@ -147,7 +147,7 @@ bool Ch2FinishOnLeave(ITUWidget* widget, char* param)
 	CtLogRed("Leave ch2 finish layer\n");
 	AudioStop();
 	TopStopStepAnimation();	
-	setTouchKeyListener(NULL);
+	// setTouchKeyListener(NULL);
 	// CsConfigVal.bReqStopTsFlg = false;
 	CsConfigVal.bReqRmtStopTSFlg = false;
 

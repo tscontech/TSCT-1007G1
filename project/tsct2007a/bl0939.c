@@ -21,8 +21,8 @@
 //-----------------------------------------------------------------------
 // MACRO
 //-----------------------------------------------------------------------
-#define READ_232_TASK_DELAY		100 // ms
-#define READ_ID_TASK_DELAY		100 // ms
+#define BL_TASK_DELAY		100 // ms
+#define LEAK_TASK_DELAY		100 // ms
 #define READ_DEV_ADDR           0x55
 #define WRITE_DEV_ADDR          0xA5
 
@@ -69,6 +69,8 @@ static uint_fast32_t errorCount = 0;
 
 static pthread_t sBLLeak;
 static bool isLeaked = false;
+
+static uint32_t parameterUpdated = 0;
 
 enum{
 	UID_CARD=1,
@@ -432,7 +434,7 @@ buffer.checksum, ret, ithGpioGet(GPIO_BL0939_LEAK));
     return ret == 35 && !errorCount;
 }
 
-bool BL0939Check(void)
+bool BL0939CheckConnection(void)
 {	
 	bool testResult = false;
 
@@ -515,7 +517,6 @@ static void* BLTask(void* arg)
 {
 
     bool notConnected = true;
-    uint32_t parameterUpdated = 0;
 
     uint8_t data[6];
     usleep(3*1000*1000);
@@ -524,7 +525,7 @@ static void* BLTask(void* arg)
     {
         if(notConnected)
         {
-            notConnected = BL0939Check();
+            notConnected = BL0939CheckConnection();
 
             if(!notConnected)
                 printf("[BL0939] First Connect - Pass\n");
@@ -580,7 +581,7 @@ static void* BLTask(void* arg)
                     parameterUpdated <<= 1;
                     break;
             }
-            usleep(500*1000);
+            usleep(100*1000);
             continue;
         }
         // else
@@ -605,18 +606,18 @@ static void* BLTask(void* arg)
         // }
         if(errorCount)
             CtLogYellow("[BL0939] Communication Error (Count %d)\n", errorCount);
-        sleep(5);
+        usleep(BL_TASK_DELAY * 1000);
 	}
 		
 	sBLTask = 0;
 	CtLogYellow("[BL0939] exit thread\n");
 }
 
-void touchToRecoverEMB(bool longpress)
-{
-    EMBListenerOnCharge12(false);
-    setTouchKeyListener(NULL);
-}
+// void touchToRecoverEMB(bool longpress)
+// {
+//     EMBListenerOnCharge12(false);
+//     setTouchKeyListener(NULL);
+// }
 
 void BL0939LeakInterrupt(unsigned int pin, void *arg);
 
@@ -628,7 +629,14 @@ void BLLeakTask()
     {
         if(isLeaked)
         {
-            MagneticContactorOff();
+            MagneticContactorOffEmergency();
+            #if USE_SECC
+                SeccTxData.status_fault |= 1<<SECC_STAT_EMG;
+                SeccTxData.status_fault &= ~(1<<SECC_STAT_CHARG);
+                SeccTxData.status_fault |= 1<<SECC_STAT_STOP;
+            #else
+                StopPwm(0);
+            #endif
             // ithGpioDisableIntr(GPIO_BL0939_LEAK);
             if(isLeaked = ithGpioGet(GPIO_BL0939_LEAK))
             {
@@ -644,11 +652,10 @@ void BLLeakTask()
                 isLeakFirst = false;
                 if(shmDataAppInfo.app_order == APP_ORDER_CHARGING)
     			    shmDataAppInfo.charge_comp_status = END_ERR;
-			    CstSetEpqStatus(TSCT_IN_UNDER_VOLTAGE, false);
+			    CstSetEpqStatus(TSCT_GROUND_FAULT, false);
 			    ShowFatalErrorDialogBox(TSCT_GROUND_FAULT);
             }
             isStoped = false;
-
         }
         else
         {
@@ -659,11 +666,11 @@ void BLLeakTask()
                 ithGpioRegisterIntrHandler(GPIO_BL0939_LEAK, BL0939LeakInterrupt, NULL);
                 ithIntrEnableIrq(ITH_INTR_GPIO);
                 ithGpioEnableIntr(GPIO_BL0939_LEAK);
+                CstSetEpqStatus(TSCT_GROUND_FAULT, true);
             }
         }
 
-        // usleep(1000);
-        sleep(5);
+        usleep(LEAK_TASK_DELAY*1000);
     }
 
 }
@@ -674,13 +681,17 @@ void BL0939LeakInterrupt(unsigned int pin, void *arg)
     ithEnterCritical();  // to prevent from interrupt
     ithIntrDisableIrq(ITH_INTR_GPIO);
     ithGpioDisableIntr(GPIO_BL0939_LEAK);
-    MagneticContactorOff();
+    MagneticContactorOffEmergency();
     ithGpioClearIntr(GPIO_BL0939_LEAK);
     isLeaked = true;
     // printf("\x1b[0;31m[BL0939] LEAK DETECTED!!! %d\x1b[0m\n", ithGpioGet(pin));
     ithExitCritical();  //Unlock spinlock
 }
 
+bool BL0939Check(void)
+{
+    return parameterUpdated == 0b10000;
+}
 
 void BL0939Init(void)
 {
