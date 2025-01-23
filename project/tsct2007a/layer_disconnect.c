@@ -161,6 +161,7 @@ bool DisconnectOnLeave(ITUWidget* widget, char* param)
 {
 	CtLogRed("Leave disconnect layer..\n");
 	AudioStop();
+	BuzzerBeep();
 	usleep(500*1000);	// for Enter Main
 
    	return true;

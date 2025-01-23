@@ -108,6 +108,9 @@ bool ThanksOnLeave(ITUWidget* widget, char* param)
 	gotoStartLayer = false;
 	TopCloseTimer();
 	ituSpriteStop(sThanksSprite);
+
+	BuzzerBeep();
+
     return true;
 }
 

@@ -150,6 +150,9 @@ bool Ch2FinishOnLeave(ITUWidget* widget, char* param)
 	setTouchKeyListener(NULL);
 	// CsConfigVal.bReqStopTsFlg = false;
 	CsConfigVal.bReqRmtStopTSFlg = false;
+
+	BuzzerBeep();
+
     return true;
 }
 

@@ -106,6 +106,8 @@ bool AuthUserOnLeave(ITUWidget* widget, char* param)
 	TopCloseTimer();	
 	TopStopStepAnimation();
 
+	BuzzerBeep();
+
 	usleep(100*1000);	// for Enter Main
 
     return true;

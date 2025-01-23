@@ -143,5 +143,8 @@ bool Ch2OnLeave(ITUWidget* widget, char* param)
 {		
 	CtLogRed("Exit ch2 Layer");
 	AudioStop();
+
+	BuzzerBeep();
+
 	return true;
 }

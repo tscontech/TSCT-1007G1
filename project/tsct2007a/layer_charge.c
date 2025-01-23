@@ -1022,6 +1022,8 @@ bool ChargeOnLeave(ITUWidget* widget, char* param)
 	
 	setTouchKeyListener(NULL);
 
+	BuzzerBeep();
+
 	usleep(200*1000);
 	CtLogRed("Leave charge layer\n");	
 	return true;

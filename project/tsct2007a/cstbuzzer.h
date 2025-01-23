@@ -14,6 +14,7 @@ void BuzzerInit(void);
 void BuzzerOn(void);
 void BuzzerOff(void);
 void BuzzerBeep(void);
+void BuzzerDoubleBeep(void);
 
 
 #endif
