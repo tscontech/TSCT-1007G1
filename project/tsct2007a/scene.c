@@ -71,9 +71,8 @@ static float        screenDistance;
 static bool         isReady;
 static int          periodPerFrame;
 
-ITPKeyboardEvent UIKeyboardInput;
-typedef void (*UIKeyboardBindFunc)(uint32_t flag, uint32_t code);
-UIKeyboardBindFunc UIKeyboardFunc;
+ITPKeyboardEvent uiKeyboardInput;    //Keyboard Input value
+KeyboardListener uiKeyboardListener;     //Keyboard Listener Function
 
 TouchKeyEvent   UITouchKeyInput;
 TouchKeyListener UITouchKeyListenerArray[APP_ORDER_END] = {dummyListener, };
@@ -497,8 +496,11 @@ int SceneRun(void)
             break;
 
 #ifdef CFG_LCD_ENABLE
-        if(UIKeyboardFunc && UIKeyboardInput.flags != 0)
-            UIKeyboardFunc(UIKeyboardInput.flags, UIKeyboardInput.code);
+        if(uiKeyboardListener && uiKeyboardInput.flags != 0)
+        {
+            uiKeyboardListener(uiKeyboardInput.flags, uiKeyboardInput.code);
+            uiKeyboardInput.flags = 0;
+        }
         else if(UITouchKeyInput.isTouched)
         {
             UITouchKeyInput.isTouched = false;

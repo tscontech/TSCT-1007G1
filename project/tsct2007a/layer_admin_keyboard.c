@@ -65,11 +65,6 @@ regmatch_t regMatch[REGEX_MAXMATCH];
 #define SERVADDR_OCTT       "ws://6631c3220041dc71.octt.openchargealliance.org"
 #define SERVADDR_DEVOCPP    "ws://ocpp.tscontech.com"
 
-//Keyboard
-extern ITPKeyboardEvent UIKeyboardInput;   //Keyboard Input value
-typedef void (*UIKeyboardBindFunc)(uint32_t flag, uint32_t code);   //Keyboard Bind function type for UI
-extern UIKeyboardBindFunc UIKeyboardFunc;                                  //Keyboard Bind function for UI
-
 //String and keyboard filter values using in setValueBackground
 static char* settingMap[18][3] = 
 {
@@ -234,12 +229,6 @@ void printMatch()
     {
         printf("Group %d = (%d, %d)\n", i, regMatch[i].rm_so, regMatch[i].rm_eo);
     }
-}
-
-void passKeyboard(uint32_t flag, uint32_t code)
-{
-    UIKeyboardInput.code = code;
-    UIKeyboardInput.flags = flag;
 }
 
 inline AdminPageToIntPage(ADMIN_PAGE ap)
@@ -1323,9 +1312,6 @@ void keyboardControl(uint32_t flag, uint32_t code)
 {
     DEBUGPRINT("Flag : %d Code : %d\n", flag, code);
 
-    UIKeyboardInput.flags = 0;
-    UIKeyboardInput.code = 0;
-
     //if KEYUP event(0x2), do nothing
     if(flag == 0x2) 
         return; 
@@ -1474,9 +1460,7 @@ bool AdminKeyboardEnter(ITUWidget* widget, char* param)
 
     page = ADMIN_PAGE_NETWORK;
     
-
-    UIKeyboardFunc = keyboardControl;
-    hookKeyboard(passKeyboard);
+    hookKeyboard(keyboardControl);
 
     DEBUGPRINT("Keyboard Hooked");
 

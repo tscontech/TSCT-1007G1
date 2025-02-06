@@ -35,7 +35,9 @@ USB Keyboard 입력
 
 pthread_t keyboardTask;
 
-//입력 버퍼
+extern ITPKeyboardEvent uiKeyboardInput;        //Keyboard Input value
+extern KeyboardListener uiKeyboardListener;     //Keyboard Listener Function
+
 char* inputBuffer;
 const size_t inputBufferSize = 200;
 size_t inputBufferTop = 0;
@@ -60,8 +62,6 @@ typedef struct
 KEY_MODIFIER Modifier = {false, false, false, false, false, false, false};
 
 extern bool bGloAdminStatus;
-
-KeyboardBindFunc hookedFunction = NULL;
 
 KEYBOARD_FILTER selectedFilter = KEYBOARD_FILTER_FREE;
 
@@ -102,16 +102,11 @@ const bool isSpecial(const char code)
     return false;
 }
 
-void dummyHooker(uint32_t flag, uint32_t code)
-{
-    return;
-}
 
-void hookKeyboard(KeyboardBindFunc func)
+void hookKeyboard(KeyboardListener func)
 {
-    if(func == NULL) hookedFunction = dummyHooker;
-    else hookedFunction = func;
-    printf("[USBKeyboard] New Hooker Set! %p\n", hookedFunction);
+    uiKeyboardListener = func;
+    printf("[USBKeyboard] New Listener Set! %p\n", uiKeyboardListener);
 }
 
 char keyboardFilter(uint32_t code)
@@ -185,32 +180,6 @@ void setKeyboardFilter(KEYBOARD_FILTER filter)
     selectedFilter = filter;
 }
 
-
-/*!
- * @name enterAdminMode
- * @brief 관리자 모드 접근을 검사하는 함수. Return을 연속 2번 눌러야 관리자 모드로 들어간다.
- * @todo Make it to move to other layers.
- */
-void enterAdminMode(uint32_t flag, uint32_t code)
-{//TODO: 더 좋은 이름 생각하기!
-    int checkKey = 0;
-
-    if(flag == ITP_KEYDOWN)  //esc 입력
-    {
-        if(scancode_to_char[code] == '\n' && ++checkKey > 2) //TODO: ESC 2번 누르면 ADMIN 진입! UI 따로 만들기! 들어갈 방법을 찾아라....!
-        {
-            //FIXME: 아래대로 하면 에러나서 덤프 -> 리붓됨
-            bGloAdminStatus = true;
-            //adminsetipEnter(NULL, NULL);
-            hookedFunction = commandInput;
-        }
-        else
-        {  //다른 키 입력 시 카운터 초기화
-            checkKey = 0;
-        }
-    }
-}
-
 /*!
  * @name usbKeyboardTask
  * @brief system task for usb keyboard.
@@ -219,12 +188,11 @@ void enterAdminMode(uint32_t flag, uint32_t code)
 */
 static void usbKeyboardTask(void* arg)
 {
-    char* command, *data;  //명령과 데이터로 나누었을 때 각각의 문자열 시작점.
     ITPKeyboardEvent ev;
 
     while(keyboardTask)
     {
-        if(hookedFunction == dummyHooker)
+        if(uiKeyboardListener == NULL)
         {
             sleep(5);
             continue;
@@ -260,7 +228,8 @@ static void usbKeyboardTask(void* arg)
                     break;
                 default : 
                     // commandInput(ev.flags, ev.code);
-                    hookedFunction(ev.flags, ev.code);
+                    uiKeyboardInput.code = ev.code;
+                    uiKeyboardInput.flags = ev.flags;
             }
         }
 
@@ -271,16 +240,14 @@ static void usbKeyboardTask(void* arg)
     
     //이상하게 빠져나간 태스크 지우기
     CtLogMagenta("[USBKeyboard] Delete keyboard thread..\n");
-    free(inputBuffer);
-    free(resultBuffer);
     vTaskDelete( NULL );
 }
 
 void usbKeyboardInit()
 {
     //입출력버퍼 초기화. Hoxy나 모를 상황을 대비해 \0을 맨 끝에 두기 위해 inputBufferSize + 1만큼 0으로 초기화
-    inputBuffer = calloc(inputBufferSize + 1, sizeof(char));
-    resultBuffer = calloc(resultBufferSize + 1, sizeof(char));
+    // inputBuffer = calloc(inputBufferSize + 1, sizeof(char));
+    // resultBuffer = calloc(resultBufferSize + 1, sizeof(char));
     CtLogYellow(" create keyboard thread..\n");
     
     if(pthread_create(&keyboardTask, NULL, usbKeyboardTask, NULL))
