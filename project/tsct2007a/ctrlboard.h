@@ -542,7 +542,8 @@ typedef enum
     USER_AUTH_PASSWORD,  	// 3: button
     USER_AUTH_NET_QR,       // 4: server + qr
     USER_AUTH_NET_REMOTE,   // 5: server + remote
-	USER_AUTH_MAX           // 6: 
+    USER_AUTH_NET_BOTH,     // 6: server + qr + remote
+	USER_AUTH_MAX           // 7: end
 } UserAuthType;
 
 typedef struct
