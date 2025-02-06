@@ -35,6 +35,9 @@
 
 // #include "tsctsecc.h"
 
+
+bool bPlcPower = false;
+
 #if USE_SECC
 
 //-----------------------------------------------------------------------
@@ -1153,14 +1156,10 @@ void ParsRxData(void)
 		case 30007:
 			SeccRxData.pwmvoltage = Led2Bed16(SeccModbusReadRx.Data16[(SeccModbusReadRx.DataLen - tmp)/2]);
 			// printf("SeccRxData.pwmvoltage : %d\r\n", SeccRxData.pwmvoltage);
-			if( ( SeccRxData.pwmvoltage > 70 || SeccRxData.pwmvoltage < 50 ))
+			if( !bGloAdminStatus && ( SeccRxData.pwmvoltage > 70 || SeccRxData.pwmvoltage < 50 ))
 			{
 				MagneticContactorOff();
-			}
-			else
-			{
-				MagneticContactorOn();
-			}
+			}  //DO NOT ON MC HERE (NEED TO WAIT 900MS FOR TURN ON)
 			/*
 			if(SeccRxData.pwmvoltage >= 110 && SeccRxData.pwmvoltage <= 130)  //SADASDSADASDADADDASDASDASDASD
 				// return CP_VOLTAGE_12V;	
@@ -1356,6 +1355,7 @@ void SeccInit(void)
 	ithGpioClear(GPIO_PLC_PWR_RELAY_CTL);	
 	sleep(3);
 	ithGpioSet(GPIO_PLC_PWR_RELAY_CTL);	
+	bPlcPower = true;
 
 	CtLogYellow("[Secc] PLC Relay On\n");
 
@@ -1388,6 +1388,8 @@ void SeccInit(void)
 }
 
 
+
+
 #else
 static void* SeccRS232ReadTask(void* arg){return NULL;}
 static uint16_t Led2Bed16(uint16_t Led16){return 0;}
@@ -1405,5 +1407,30 @@ static void* SeccRS232ReqTask(void* arg){}
 bool ValidSecc(char* rx_Src, char* Src, uint16_t size){return false;}
 bool vasParsFunc(SECC_VAS_READ_DATA* des, uint16_t *buf, uint16_t* src, uint8_t size) {return false;}
 void ParsRxData(void){}
-void SeccInit(void){}
+void SeccInit(void)
+{
+	ithGpioSetMode(GPIO_PLC_PWR_RELAY_CTL, ITH_GPIO_MODE0);
+	ithGpioSetOut(GPIO_PLC_PWR_RELAY_CTL);
+	ithGpioClear(GPIO_PLC_PWR_RELAY_CTL);	
+	sleep(3);
+	ithGpioSet(GPIO_PLC_PWR_RELAY_CTL);
+	bPlcPower = true;
+}
 #endif
+
+bool PLCPowerStatus()
+{
+	return bPlcPower;
+}
+
+bool PLCPowerOff()
+{
+	ithGpioClear(GPIO_PLC_PWR_RELAY_CTL);	
+	bPlcPower = false;
+}
+
+bool PLCPowerOn()
+{
+	ithGpioSet(GPIO_PLC_PWR_RELAY_CTL);	
+	bPlcPower = true;
+}
