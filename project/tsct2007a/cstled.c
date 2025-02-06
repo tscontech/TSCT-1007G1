@@ -34,6 +34,12 @@ unsigned int blueledPin = GPIO_LED_BLUE;
 //-----------------------------------------------------------------------
 // Function
 //-----------------------------------------------------------------------
+
+bool LEDStatus(void)
+{
+	return sLedOn;
+}
+
 void LEDOn(void)
 {
 	ithGpioSet(redledPin);

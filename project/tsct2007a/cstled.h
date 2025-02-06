@@ -10,6 +10,7 @@
 #ifndef __CSTLED_H__
 #define __CSTLED_H__
 
+bool LEDStatus(void);
 void LEDOn(void);
 void LEDOff(void);
 void LEDStartBlink(void);

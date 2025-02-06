@@ -35,11 +35,11 @@ extern bool CardWaitLeave(ITUWidget* widget, char* param);
 extern bool ChargeOnEnter(ITUWidget* widget, char* param);
 extern bool ChargeOnLeave(ITUWidget* widget, char* param);
 extern bool ChargeStopOnPress(ITUWidget* widget, char* param);
+extern bool DisconnectOnEnter(ITUWidget* widget, char* param);
+extern bool DisconnectOnLeave(ITUWidget* widget, char* param);
 extern bool Ch2FinishOnEnter(ITUWidget* widget, char* param);
 extern bool Ch2FinishOnLeave(ITUWidget* widget, char* param);
 extern bool Ch2FinishConfirmOnPress(ITUWidget* widget, char* param);
-extern bool DisconnectOnEnter(ITUWidget* widget, char* param);
-extern bool DisconnectOnLeave(ITUWidget* widget, char* param);
 extern bool ThanksOnEnter(ITUWidget* widget, char* param);
 extern bool ThanksOnLeave(ITUWidget* widget, char* param);
 extern bool ThanksOkOnPress(ITUWidget* widget, char* param);
@@ -195,6 +195,8 @@ extern bool backBtn_press(ITUWidget* widget, char* param);
 extern bool homeBtn_press(ITUWidget* widget, char* param);
 extern bool TerminalOnEnter(ITUWidget* widget, char* param);
 extern bool TerminalOnLeave(ITUWidget* widget, char* param);
+extern bool AdminKeyboardEnter(ITUWidget* widget, char* param);
+extern bool AdminKeyboardLeave(ITUWidget* widget, char* param);
 
 ITUActionFunction actionFunctions[] =
 {
@@ -233,11 +235,11 @@ ITUActionFunction actionFunctions[] =
     "ChargeOnEnter", ChargeOnEnter,
     "ChargeOnLeave", ChargeOnLeave,
     "ChargeStopOnPress", ChargeStopOnPress,
+    "DisconnectOnEnter", DisconnectOnEnter,
+    "DisconnectOnLeave", DisconnectOnLeave,
     "Ch2FinishOnEnter", Ch2FinishOnEnter,
     "Ch2FinishOnLeave", Ch2FinishOnLeave,
     "Ch2FinishConfirmOnPress", Ch2FinishConfirmOnPress,
-    "DisconnectOnEnter", DisconnectOnEnter,
-    "DisconnectOnLeave", DisconnectOnLeave,
     "ThanksOnEnter", ThanksOnEnter,
     "ThanksOnLeave", ThanksOnLeave,
     "ThanksOkOnPress", ThanksOkOnPress,
@@ -393,5 +395,7 @@ ITUActionFunction actionFunctions[] =
     "homeBtn_press", homeBtn_press,
     "TerminalOnEnter", TerminalOnEnter,
     "TerminalOnLeave", TerminalOnLeave,
+    "AdminKeyboardEnter", AdminKeyboardEnter,
+    "AdminKeyboardLeave", AdminKeyboardLeave,
     NULL, NULL
 };

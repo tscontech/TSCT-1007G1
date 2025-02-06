@@ -117,7 +117,7 @@ void keyboardOnMain(uint32_t flag, uint32_t code)
 		if(enterPressed > 2)
 		{
 			if(!sChCharging)
-					ituLayerGoto(ituSceneFindWidget(&theScene, "TerminalLayer"));	
+					ituLayerGoto(ituSceneFindWidget(&theScene, "AdminKeyboardLayer"));	
 		}
 	}
 }
