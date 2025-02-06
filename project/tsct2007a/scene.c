@@ -71,10 +71,13 @@ static float        screenDistance;
 static bool         isReady;
 static int          periodPerFrame;
 
-extern ITPKeyboardEvent UIKeyboardInput;
+ITPKeyboardEvent UIKeyboardInput;
 typedef void (*UIKeyboardBindFunc)(uint32_t flag, uint32_t code);
+UIKeyboardBindFunc UIKeyboardFunc;
 
-extern UIKeyboardBindFunc UIKeyboardFunc;
+TouchKeyEvent   UITouchKeyInput;
+TouchKeyListener UITouchKeyListenerArray[APP_ORDER_END] = {dummyListener, };
+TouchKeyListener privilegedUITouchKeyListener;
 
 #if defined(CFG_USB_MOUSE) || defined(_WIN32)
 static ITUIcon      *cursorIcon;
@@ -495,7 +498,15 @@ int SceneRun(void)
 
 #ifdef CFG_LCD_ENABLE
         if(UIKeyboardFunc && UIKeyboardInput.flags != 0)
-        UIKeyboardFunc(UIKeyboardInput.flags, UIKeyboardInput.code);
+            UIKeyboardFunc(UIKeyboardInput.flags, UIKeyboardInput.code);
+        else if(UITouchKeyInput.isTouched)
+        {
+            UITouchKeyInput.isTouched = false;
+            if(privilegedUITouchKeyListener)
+                privilegedUITouchKeyListener(UITouchKeyInput.isLongPush);
+            else if(UITouchKeyListenerArray[shmDataAppInfo.app_order])
+                UITouchKeyListenerArray[shmDataAppInfo.app_order](UITouchKeyInput.isLongPush);
+        }
         ProcessCommand();
 #endif
         CheckExternal();

@@ -13,10 +13,14 @@
 
 void dummyListener(bool longPush);
 
-TouchKeyListener privilegedListener;
 uint32_t lastPush;
 pthread_t touchKeyTaskID;
-TouchKeyListener listenerArray[APP_ORDER_END] = {dummyListener, };
+// TouchKeyListener privilegedListener;
+// TouchKeyListener listenerArray[APP_ORDER_END] = {dummyListener, };
+
+extern TouchKeyEvent   UITouchKeyInput;
+extern TouchKeyListener UITouchKeyListenerArray[APP_ORDER_END];
+extern TouchKeyListener privilegedUITouchKeyListener;
 
 
 void dummyListener(bool longPush)
@@ -26,27 +30,27 @@ void dummyListener(bool longPush)
 
 void setTouchKeyListener(TouchKeyListener l, APP_ORDER appOrder)
 {
-    if(listenerArray[appOrder] == NULL)
-        listenerArray[appOrder] = l;
+    if(UITouchKeyListenerArray[appOrder] == NULL)
+        UITouchKeyListenerArray[appOrder] = l;
 }
 
 void setPrivilegedTouchKeyListener(TouchKeyListener l)
 {
-    privilegedListener = l;
+    privilegedUITouchKeyListener = l;
 }
 
 //touch key task. run event listener when key up event.
 void touchKeyTask(void)
 {
-    bool now, screenOn;
+    bool now, screenOn = false;
 
     while(1)
     {
-        now = ithGpioGet(GPIO_TOUCHKEY1);
+        now = !ithGpioGet(GPIO_TOUCHKEY1);
         
         if(now)
         {   //Pushing key
-            if(screenOff)
+            if(ScreenIsOff())
             {
                 ScreenOnScenario();  //Turn on screen
                 screenOn = true;
@@ -61,25 +65,24 @@ void touchKeyTask(void)
             if(lastPush)
             {
                 if(screenOn)
-                {
+                {   //Skip any action for this touch (Just turn on screen)
                     screenOn = false;
                 }
                 else if(lastPush >= TOUCHKEY_LONG_PUSH_TIME)
                 {//long push
                     printf("[TOUCHKEY] Long Touch! %d\n", lastPush);
                 // BuzzerDoubleBeep();
-                    if(privilegedListener) privilegedListener(true);
-                    else listenerArray[shmDataAppInfo.app_order](true);
+                    UITouchKeyInput.isLongPush = true;
                 }
                 else
                 {//short push
                     printf("[TOUCHKEY] Short Touch! %d\n", lastPush);
                 // BuzzerBeep();
-                    if(privilegedListener) privilegedListener(false);
-                    else listenerArray[shmDataAppInfo.app_order](false);
+                    UITouchKeyInput.isLongPush = false;
                 }
 
                 lastPush = 0;
+                UITouchKeyInput.isTouched = true;
             }
         }
 

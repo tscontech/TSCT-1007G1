@@ -66,9 +66,9 @@ regmatch_t regMatch[REGEX_MAXMATCH];
 #define SERVADDR_DEVOCPP    "ws://ocpp.tscontech.com"
 
 //Keyboard
-ITPKeyboardEvent UIKeyboardInput;   //Keyboard Input value
+extern ITPKeyboardEvent UIKeyboardInput;   //Keyboard Input value
 typedef void (*UIKeyboardBindFunc)(uint32_t flag, uint32_t code);   //Keyboard Bind function type for UI
-UIKeyboardBindFunc UIKeyboardFunc;                                  //Keyboard Bind function for UI
+extern UIKeyboardBindFunc UIKeyboardFunc;                                  //Keyboard Bind function for UI
 
 //String and keyboard filter values using in setValueBackground
 static char* settingMap[18][3] = 

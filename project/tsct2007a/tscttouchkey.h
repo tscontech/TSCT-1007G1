@@ -7,6 +7,13 @@
 #define TOUCHKEY_LISTENER_STACK_SIZE 10
 
 typedef void (*TouchKeyListener)(bool);
+typedef struct
+{
+    bool isTouched;
+    bool isLongPush;
+}TouchKeyEvent;
+
+void dummyListener(bool longPush);
 
 void setTouchKeyListener(TouchKeyListener l, APP_ORDER appOrder);
 
