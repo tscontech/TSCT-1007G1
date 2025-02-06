@@ -92,7 +92,7 @@ bool bGloAdminStatus;
 
 
 // Common
-#define GPIO_BUZZER			58  //Buzzer는 Touch Sensor에 연동되도록 변경
+#define GPIO_BUZZER			58
 // #define GPIO_PILOT_PWR1		22
 // #define GPIO_PILOT_PWR2		19
 

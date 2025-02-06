@@ -63,12 +63,43 @@ extern bool bGloAdminStatus;
 
 KeyboardBindFunc hookedFunction = NULL;
 
+KEYBOARD_FILTER selectedFilter = KEYBOARD_FILTER_FREE;
+
 const char scancodeToChar(const char input)
 {
     if(input >= KEYCODE_A && input <= KEYCODE_Z) 
         return (((Modifier.leftShift || Modifier.rightShift) ^ Modifier.capslock) ? scancode_to_char_shift[(input)] : scancode_to_char[(input)]);
     else 
         return ((Modifier.leftShift || Modifier.rightShift)  ? scancode_to_char_shift[(input)] : scancode_to_char[(input)]);
+}
+
+const bool isShift(bool capslockIncluded)
+{
+    if(capslockIncluded)
+        return (Modifier.leftShift || Modifier.rightShift) ^ Modifier.capslock;
+    else
+        return Modifier.leftShift || Modifier.rightShift;
+}
+
+const bool isAlpha(const char code)
+{
+    if(code >= KEYCODE_A && code <= KEYCODE_Z) return true;
+    // else if(code >= KEYCODE_KEYPAD_A && code <= KEYCODE_KEYPAD_F) return true;
+    return false;
+}
+
+const bool isNumber(const char code)
+{
+    if(!isShift(false) && code >= KEYCODE_1 && code <= KEYCODE_0) return true;
+    // else if(code >= KEYCODE_KEYPAD_1 && code <= KEYCODE_KEYPAD_0) return true;
+    return false;
+}
+
+const bool isSpecial(const char code)
+{
+    if(code >= KEYCODE_HIPHEN_MINUS && code <= KEYCODE_SLASH) return true;
+    else if(isShift(false) && code >= KEYCODE_1 && code <= KEYCODE_0) return true;
+    return false;
 }
 
 void dummyHooker(uint32_t flag, uint32_t code)
@@ -81,6 +112,77 @@ void hookKeyboard(KeyboardBindFunc func)
     if(func == NULL) hookedFunction = dummyHooker;
     else hookedFunction = func;
     printf("[USBKeyboard] New Hooker Set! %p\n", hookedFunction);
+}
+
+char keyboardFilter(uint32_t code)
+{   //Numpad is not supported
+    printf("[keyboardFilter] Filter = %d, code = %d", selectedFilter, code);
+    //No Input
+    if(selectedFilter == KEYBOARD_FILTER_NONE) return 0;
+
+    //Any input
+    if(selectedFilter & KEYBOARD_FILTER_BOOLEAN)
+    {   //Boolean(0, 1) only
+        if((code == KEYCODE_1 || code == KEYCODE_0) && !isShift(false)) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_NUMBER)
+    {   //Digit(0-9) only
+        if(code >= KEYCODE_1 && code <= KEYCODE_0 && !isShift(false)) return scancodeToChar(code);
+    }
+    
+    if(selectedFilter & KEYBOARD_FILTER_DOT)
+    {   //Dot(.) only (for IP)
+        if(code == KEYCODE_DOT && !isShift(false)) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_HEXALPHA)
+    {   //Hex Alphabets (A-F)
+        if( (code >= KEYCODE_A) && (code <= KEYCODE_F) ) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_COLON)
+    {   //Colon(:) only (for MAC addr)
+        if( (code == KEYCODE_SEMICOLON) && isShift(false)) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_ALPHA)
+    {   //Alphabet
+        if( (code >= KEYCODE_A) && (code <= KEYCODE_Z) ) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_SLASH)
+    {   //Slash(/) only
+        if( (code == KEYCODE_SLASH) && !isShift(false)) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_HIPHEN)
+    {   //Hiphen(-) only
+        if(code == KEYCODE_HIPHEN_MINUS && !isShift(false)) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_UNDERSCORE)
+    {   //Underscore(_) only
+        if(code == KEYCODE_HIPHEN_MINUS && isShift(false)) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_SPECIAL)
+    {   //Special characters(   ~!@#$%^&*()_+`-=[];',./{}:"<>?"\|   )
+        if(isSpecial(code)) return scancodeToChar(code);
+    }
+
+    if(selectedFilter & KEYBOARD_FILTER_SPACE)
+    {
+        if( (code == KEYCODE_TAB) || (code <= KEYCODE_SPACE) ) return scancodeToChar(code);
+    }
+
+    //No Vaild Input
+    return 0;
+}
+
+void setKeyboardFilter(KEYBOARD_FILTER filter)
+{
+    selectedFilter = filter;
 }
 
 
@@ -133,23 +235,23 @@ static void usbKeyboardTask(void* arg)
             switch(ev.code)
             {
                 case KEYCODE_LEFT_CONTROL:  // Left Control
-                    Modifier.leftControl = (ev.flags == ITP_KEYDOWN) ? true : false;
+                    Modifier.leftControl = (ev.flags == ITP_KEYDOWN);
                     break;
                 case KEYCODE_LEFT_SHIFT:  // Left Shift
-                    Modifier.leftShift = (ev.flags == ITP_KEYDOWN) ? true : false;
+                    Modifier.leftShift = (ev.flags == ITP_KEYDOWN);
                     break;
                 case KEYCODE_LEFT_ALT:  // Left Alt
-                    Modifier.leftAlt = (ev.flags == ITP_KEYDOWN) ? true : false;
+                    Modifier.leftAlt = (ev.flags == ITP_KEYDOWN);
                     break;
 
                 case KEYCODE_RIGHT_CONTROL:  // Right Control
-                    Modifier.rightControl = (ev.flags == ITP_KEYDOWN) ? true : false;
+                    Modifier.rightControl = (ev.flags == ITP_KEYDOWN);
                     break;
                 case KEYCODE_RIGHT_SHIFT:  // Right Shift
-                    Modifier.rightShift = (ev.flags == ITP_KEYDOWN) ? true : false;
+                    Modifier.rightShift = (ev.flags == ITP_KEYDOWN);
                     break;
                 case KEYCODE_RIGHT_ALT:  // Right Alt
-                    Modifier.rightAlt = (ev.flags == ITP_KEYDOWN) ? true : false;
+                    Modifier.rightAlt = (ev.flags == ITP_KEYDOWN);
                     break;
 
                 case KEYCODE_CAPSLOCK:  //Caps lock

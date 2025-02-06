@@ -170,6 +170,8 @@ void ConfigInit(void)
 	theConfig.FreeChargingTime = iniparser_getint(cfgIni, "basicconfig:FreeChargingTime", 0);	//
 	strncpy(theConfig.chkModeMac, iniparser_getstring(cfgIni, "basicconfig:chkModeMac", "9012A100CB12"), sizeof(theConfig.chkModeMac));
 	theConfig.targetSoc = iniparser_getint(cfgIni, "basicconfig:targetSoc", 100);	//
+	theConfig.maxPower = iniparser_getint(cfgIni, "basicconfig:maxPower", 7);	//
+	theConfig.forcePowerLimit = iniparser_getboolean(cfgIni, "basicconfig:forcePowerLimit", false);
     
 	// Stop Transaction
 	StopTsConfig.Connector_No = iniparser_getint(cfgIni, "application:con_no", (0));
@@ -210,7 +212,7 @@ void ConfigInit(void)
 	strncpy(theConfig.serverip, iniparser_getstring(cfgIni, "tcpip:serverip", DEFAULT_NETSVRIP), sizeof(theConfig.serverip));	
 	theConfig.serverport = iniparser_getint(cfgIni, "tcpip:serverport", DEFAULT_NETSVRPORT);
 	strncpy(theConfig.ftpIp, iniparser_getstring(cfgIni, "tcpip:ftpIp", DEFAULT_NETFTPIP), sizeof(theConfig.ftpIp));	
-	strncpy(theConfig.ftpDns, iniparser_getstring(cfgIni, "tcpip:ftpDns", "csms-ftp.tscontech.com"), sizeof(theConfig.ftpDns));
+	strncpy(theConfig.ftpDns, iniparser_getstring(cfgIni, "tcpip:ftpDns", DEFAULT_NETFTPADDR), sizeof(theConfig.ftpDns));
 	strncpy(theConfig.ftpId, iniparser_getstring(cfgIni, "tcpip:ftpId", "cptsct"), sizeof(theConfig.ftpId));	
 	strncpy(theConfig.ftpPw, iniparser_getstring(cfgIni, "tcpip:ftpPw", DEFAULT_NETFTPPW), sizeof(theConfig.ftpPw));	
 
@@ -652,7 +654,7 @@ void ConfigExit(void)
 static void ConfigSavePublic(void)
 {
     FILE* f;
-    char buf[20];
+    char buf[70];
     iniparser_set(cfgIni, "application:configcheck", theConfig.configcheck);
 	iniparser_set(cfgIni, "application:authkey", theConfig.authkey);
 
@@ -745,7 +747,15 @@ static void ConfigSavePublic(void)
 	sprintf(buf, "%d", theConfig.FreeChargingTime);
     iniparser_set(cfgIni, "basicconfig:FreeChargingTime", buf);
 	iniparser_set(cfgIni, "basicconfig:chkModeMac", theConfig.chkModeMac);
-	iniparser_set(cfgIni, "basicconfig:targetSoc", theConfig.targetSoc);
+	memset(buf,0x00,sizeof(buf));
+	sprintf(buf, "%d", theConfig.targetSoc);
+	iniparser_set(cfgIni, "basicconfig:targetSoc", buf);
+	memset(buf,0x00,sizeof(buf));
+	sprintf(buf, "%d", theConfig.maxPower);
+	iniparser_set(cfgIni, "basicconfig:maxPower", buf);
+	memset(buf,0x00,sizeof(buf));
+	sprintf(buf, "%d", theConfig.forcePowerLimit);
+	iniparser_set(cfgIni, "basicconfig:forcePowerLimit", buf);
 
 
 	memset(buf,0x00,sizeof(buf));
@@ -990,6 +1000,8 @@ void ConfigInitSave()// ctrlboard.ini의 default 값과 동일 해야한다.
 	theConfig.FreeChargingTime = 0;
 
 	theConfig.targetSoc = 100;
+	theConfig.maxPower = 7;
+	theConfig.forcePowerLimit = false;
 	
 	sprintf(theConfig.chkModeMac,"9012A100CB12");
 
@@ -1060,6 +1072,9 @@ static char VerifyConfigSave(void)
 	strncpy(theConfig2.gpslat, iniparser_getstring(cfgIni2, "basicconfig:gpslat", DEFAULT_GPSLAT), strlen (DEFAULT_GPSLAT) + 1);
 	strncpy(theConfig2.gpslon, iniparser_getstring(cfgIni2, ":gpslon", DEFAULT_GPSLON), strlen (DEFAULT_GPSLON) + 1);
 	theConfig2.chargingstatus = iniparser_getint(cfgIni2, "basicconfig:chargingstatus", 2); // not used
+	theConfig2.targetSoc = iniparser_getint(cfgIni2, "basicconfig:targetSoc", 100);	//
+	theConfig2.maxPower = iniparser_getint(cfgIni2, "basicconfig:maxPower", 7);	//
+	theConfig2.forcePowerLimit = iniparser_getboolean(cfgIni2, "basicconfig:forcePowerLimit", false);
 	
 	// [tcpip] - network
 	theConfig2.dhcp = iniparser_getint(cfgIni, "tcpip:dhcp", (1));
@@ -1069,12 +1084,13 @@ static char VerifyConfigSave(void)
 	strncpy(theConfig2.netmask, iniparser_getstring(cfgIni2, "tcpip:netmask", DEFAULT_NETMASK), strlen (DEFAULT_NETMASK) + 1);
 	strncpy(theConfig2.gw, iniparser_getstring(cfgIni2, "tcpip:gw", DEFAULT_NETGW), strlen (DEFAULT_NETGW) + 1);
 	strncpy(theConfig2.dns, iniparser_getstring(cfgIni2, "tcpip:dns", DEFAULT_NETDNS), strlen (DEFAULT_NETDNS) + 1);
-	strncpy(theConfig2.serverip, iniparser_getstring(cfgIni2, "tcpip:serverip", DEFAULT_NETSVRIP), strlen (DEFAULT_NETSVRIP) + 1);	
+	strncpy(theConfig2.serverip, iniparser_getstring(cfgIni2, "tcpip:serverip", DEFAULT_NETSVRIP), sizeof (theConfig2.serverip) + 1);	
 	theConfig2.serverport = iniparser_getint(cfgIni2, "tcpip:serverport", DEFAULT_NETSVRPORT);
 
-	strncpy(theConfig2.ftpIp, iniparser_getstring(cfgIni2, "tcpip:ftpIp", DEFAULT_NETFTPIP), strlen (DEFAULT_NETFTPIP) + 1);	
-	strncpy(theConfig2.ftpIp, iniparser_getstring(cfgIni2, "tcpip:ftpId", DEFAULT_NETFTPID), strlen (DEFAULT_NETFTPID) + 1);	
-	strncpy(theConfig2.ftpIp, iniparser_getstring(cfgIni2, "tcpip:ftpPw", DEFAULT_NETFTPPW), strlen (DEFAULT_NETFTPPW) + 1);	
+	strncpy(theConfig2.ftpIp, iniparser_getstring(cfgIni2, "tcpip:ftpIp", DEFAULT_NETFTPIP), sizeof (theConfig2.ftpIp) + 1);	
+	strncpy(theConfig2.ftpDns, iniparser_getstring(cfgIni2, "tcpip:ftpDns", DEFAULT_NETFTPADDR), sizeof (theConfig2.ftpDns) + 1);	
+	strncpy(theConfig2.ftpId, iniparser_getstring(cfgIni2, "tcpip:ftpId", DEFAULT_NETFTPID), sizeof (theConfig2.ftpId) + 1);	
+	strncpy(theConfig2.ftpPw, iniparser_getstring(cfgIni2, "tcpip:ftpPw", DEFAULT_NETFTPPW), sizeof (theConfig2.ftpPw) + 1);	
 
 	// [ctrlboard] - display
 	theConfig2.lang = iniparser_getint(cfgIni2, "ctrlboard:lang", LANG_ENG);
@@ -1157,7 +1173,7 @@ static char VerifyConfigSave(void)
 
 	if ( strcmp(theConfig2.serverip, theConfig.serverip) )    
 	{
-	    printf("different serverip  %20s, %20s\n", theConfig.serverip, theConfig2.serverip);
+	    printf("different serverip  %70s, %70s\n", theConfig.serverip, theConfig2.serverip);
         ret = 1;
     }
 
@@ -1174,7 +1190,7 @@ static char VerifyConfigSave(void)
     }
 	if ( strcmp(theConfig2.ftpDns, theConfig.ftpDns) )    
 	{
-	    printf("different ftpIp  %41s, %41s\n", theConfig.ftpDns, theConfig2.ftpDns);
+	    printf("different ftpDns  %s, %s\n", theConfig.ftpDns, theConfig2.ftpDns);
         ret = 1;
     }
 
@@ -1187,6 +1203,24 @@ static char VerifyConfigSave(void)
 	if ( strcmp(theConfig2.ftpPw, theConfig.ftpPw) )    
 	{
 	    printf("different ftpPw  %16s, %16s\n", theConfig.ftpPw, theConfig2.ftpPw);
+        ret = 1;
+    }	
+
+	if ( theConfig2.maxPower != theConfig.maxPower )    
+	{
+	    printf("different maxPower  %d, %d\n", theConfig.maxPower, theConfig2.maxPower);
+        ret = 1;
+    }	
+
+	if ( theConfig2.forcePowerLimit != theConfig.forcePowerLimit )    
+	{
+	    printf("different forcePowerLimit  %d, %d\n", theConfig.forcePowerLimit, theConfig2.forcePowerLimit);
+        ret = 1;
+    }	
+
+	if ( theConfig2.targetSoc != theConfig.targetSoc )    
+	{
+	    printf("different targetSoc  %d, %d\n", theConfig.targetSoc, theConfig2.targetSoc);
         ret = 1;
     }	
 

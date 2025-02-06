@@ -71,6 +71,11 @@ static float        screenDistance;
 static bool         isReady;
 static int          periodPerFrame;
 
+extern ITPKeyboardEvent UIKeyboardInput;
+typedef void (*UIKeyboardBindFunc)(uint32_t flag, uint32_t code);
+
+extern UIKeyboardBindFunc UIKeyboardFunc;
+
 #if defined(CFG_USB_MOUSE) || defined(_WIN32)
 static ITUIcon      *cursorIcon;
 #endif
@@ -489,6 +494,8 @@ int SceneRun(void)
             break;
 
 #ifdef CFG_LCD_ENABLE
+        if(UIKeyboardFunc && UIKeyboardInput.flags != 0)
+        UIKeyboardFunc(UIKeyboardInput.flags, UIKeyboardInput.code);
         ProcessCommand();
 #endif
         CheckExternal();

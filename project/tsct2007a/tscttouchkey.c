@@ -43,17 +43,16 @@ void touchKeyTask(void)
     while(1)
     {
         now = ithGpioGet(GPIO_TOUCHKEY1);
-
-        if(screenOff)
-        {
-            ScreenOnScenario();  //Turn on screen
-            screenOn = true;
-            usleep(100 * 1000);
-            continue;
-        }
         
         if(now)
         {   //Pushing key
+            if(screenOff)
+            {
+                ScreenOnScenario();  //Turn on screen
+                screenOn = true;
+                usleep(100 * 1000);
+                continue;
+            }
             ++lastPush;
             printf("[TOUCHKEY] Touching! %d\n", lastPush);
         }

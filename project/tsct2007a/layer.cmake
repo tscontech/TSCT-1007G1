@@ -10,8 +10,8 @@ add_executable(${CMAKE_PROJECT_NAME}
     layer_connect.c
     layer_cardwait.c
     layer_charge.c
-    layer_ch2_finish.c
     layer_disconnect.c
+    layer_ch2_finish.c
     layer_thanks.c
     layer_admin_login.c
     layer_numkeypad.c
@@ -28,5 +28,6 @@ add_executable(${CMAKE_PROJECT_NAME}
     layer_qualif_test.c
     layer_top.c
     layer_terminal.c
+    layer_admin_keyboard.c
 )
 

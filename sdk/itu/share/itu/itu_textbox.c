@@ -171,6 +171,8 @@ void ituTextBoxBack(ITUTextBox* textbox)
         text->string = NULL;
         ituCopyColor(&text->widget.color, &textbox->defColor);
     }
+    
+    ituWidgetSetDirty(textbox, true);
 }
 
 char* ituTextBoxGetString(ITUTextBox* textbox)
