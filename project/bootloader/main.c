@@ -1029,6 +1029,9 @@ void* BootloaderMain(void* arg)
     // ithGpioSetMode(49, ITH_GPIO_MODE0);
     // ithGpioSetOut(49);
     // ithGpioClear(49);
+    ithGpioSetMode(58, ITH_GPIO_MODE0);
+    ithGpioSetOut(58);
+    ithGpioClear(58);
 #if defined(CFG_UPGRADE_PRESSKEY) || defined(CFG_UPGRADE_RESET_FACTORY) || defined(CFG_UPGRADE_RECOVERY)
     ITPKeypadEvent ev;
 #endif
