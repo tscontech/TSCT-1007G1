@@ -48,13 +48,6 @@ char *StrCardAuthFailMsg[5] = {
 	STR_CARD_AUTH_FAIL_4
 };	
 
-void touchkeyCreditCardPressed(bool longPush)
-{
-	GotoNextAuthLayer(AUTH_CREADIT_LAYER);
-
-	return;
-}
-
 void WaitToStartLayer(void)
 {	
 	if(GotoWaittoStartLayer)
@@ -258,8 +251,6 @@ bool CardWaitEnter(ITUWidget* widget, char* param)
 
 	//TODO: 10초 지났을 때 지연 안내 어떻게 보내지...?
 	TopSetTimer(30, CardAuth1Timer1);
-
-	setTouchKeyListener(touchkeyCreditCardPressed, APP_ORDER_CUSTOMER_AUTH);
 	
     return true;
 }
