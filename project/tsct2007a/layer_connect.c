@@ -54,6 +54,21 @@ void Prepay_cancelLayer(void)
 }
 #endif
 
+//Long press touchkey = Cancel Charging
+void touchkeyConnectPress(bool longPush)
+{
+	if(longPush)
+	{	
+		shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
+		CtLogYellow("Charge Canceled by Button");
+		shmDataAppInfo.charge_comp_status = END_BTN;
+
+		//TODO: 서버에 취소 요청 또는 0초 0Wh짜리 완료 보고 보내기(상의 필요)
+	
+		ShowInfoDialogBox(EVENT_CANCEL);
+	}
+}
+
 static void PlayConnectSprite(void)
 {
 	PlayConnectSprite_flag = true;
@@ -186,6 +201,8 @@ bool ConnectOnEnter(ITUWidget* widget, char* param)
 	TopSetTimer(CfgKeyVal[2].CfgKeyDataInt, TimeOutPageOut);
 
 	ControlPilotSetListener(0, CPListenerOnConnect);
+
+	setTouchKeyListener(touchkeyConnectPress, APP_ORDER_CONNECTOR_SELECT);
 
     return true;
 }
