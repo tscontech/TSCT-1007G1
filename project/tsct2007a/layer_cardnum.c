@@ -263,8 +263,6 @@ bool CardNumOnLeave(ITUWidget* widget, char* param)
 	TopCloseTimer();
 	NumKeypadSetInputListener(NULL);
 
-	BuzzerBeep();
-
 	usleep(100*1000);	// for Enter Main
 
     return true;

@@ -1247,7 +1247,8 @@ bool ChargeOnLeave(ITUWidget* widget, char* param)
 	CardReaderStopMonitoring();
 	
 	// setTouchKeyListener(NULL);
-
+	
+	//Beep at Stop charging
 	BuzzerBeep();
 
 	usleep(200*1000);

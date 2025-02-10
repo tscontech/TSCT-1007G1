@@ -282,8 +282,6 @@ bool CardWaitLeave(ITUWidget* widget, char* param)
 	sleep(1);
 
 	// setTouchKeyListener(NULL);
-
-	BuzzerBeep();
 	
     return true;
 }

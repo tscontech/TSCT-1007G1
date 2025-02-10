@@ -313,7 +313,5 @@ bool MainOnLeave(ITUWidget* widget, char* param)
 	SetHomeLayer(false);
 	CtLogRed("Exit Main Layer %d", bHomeLayerChk);    
 
-	BuzzerBeep();
-
     return true;
 }

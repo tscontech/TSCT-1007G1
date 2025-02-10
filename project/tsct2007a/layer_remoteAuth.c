@@ -212,7 +212,6 @@ bool remoteOnLeave(ITUWidget* widget, char* param)
     // setTouchKeyListener(NULL);
     TopCloseTimer();
     sDLsWaitQRMonitoring = false;
-    BuzzerBeep();
     //sWaitQRMonitoringTask = NULL;
     return true;
 }

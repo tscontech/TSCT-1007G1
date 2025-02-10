@@ -127,8 +127,6 @@ bool RfidCardOnLeave(ITUWidget* widget, char* param)
 	
 	TopStopStepAnimation();
 
-	BuzzerBeep();
-
     return true;
 }
 

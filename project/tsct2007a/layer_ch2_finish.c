@@ -151,8 +151,6 @@ bool Ch2FinishOnLeave(ITUWidget* widget, char* param)
 	// CsConfigVal.bReqStopTsFlg = false;
 	CsConfigVal.bReqRmtStopTSFlg = false;
 
-	BuzzerBeep();
-
     return true;
 }
 

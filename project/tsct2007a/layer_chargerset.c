@@ -1147,8 +1147,6 @@ bool layer_chargersetLeave(ITUWidget* widget, char* param)
 	}
 	
 	adminsetchargerselect1 = 0;
-	
-	BuzzerBeep();
 
     return true;
 }

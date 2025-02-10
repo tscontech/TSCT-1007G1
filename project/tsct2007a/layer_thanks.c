@@ -109,8 +109,6 @@ bool ThanksOnLeave(ITUWidget* widget, char* param)
 	TopCloseTimer();
 	ituSpriteStop(sThanksSprite);
 
-	BuzzerBeep();
-
     return true;
 }
 

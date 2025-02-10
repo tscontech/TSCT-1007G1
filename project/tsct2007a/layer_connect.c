@@ -204,8 +204,6 @@ bool ConnectOnLeave(ITUWidget* widget, char* param)
 
 	// CsConfigVal.bReqStartTsNo = 0;
 
-	BuzzerBeep();
-
 	usleep(100*1000);	// for Enter Main
 
     return true;

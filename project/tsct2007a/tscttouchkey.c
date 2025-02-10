@@ -71,13 +71,14 @@ void touchKeyTask(void)
                 else if(lastPush >= TOUCHKEY_LONG_PUSH_TIME)
                 {//long push
                     printf("[TOUCHKEY] Long Touch! %d\n", lastPush);
-                // BuzzerDoubleBeep();
+                    // BuzzerDoubleBeep();
+                    BuzzerBeep();
                     UITouchKeyInput.isLongPush = true;
                 }
                 else
                 {//short push
                     printf("[TOUCHKEY] Short Touch! %d\n", lastPush);
-                // BuzzerBeep();
+                    BuzzerBeep();
                     UITouchKeyInput.isLongPush = false;
                 }
 
