@@ -46,7 +46,7 @@ void touchKeyTask(void)
 
     while(1)
     {
-        now = !ithGpioGet(GPIO_TOUCHKEY1);
+        now = ithGpioGet(GPIO_TOUCHKEY1);
         
         if(now)
         {   //Pushing key
