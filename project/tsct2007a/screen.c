@@ -135,6 +135,10 @@ void ScreenOnScenario(void)
 			 screenOff = false;
 	    }
 	}
+    else
+    {
+        ScreenSaverRefresh();
+    }
 }
 void ScreenSaverRefresh(void)
 {
