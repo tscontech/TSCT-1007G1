@@ -123,25 +123,40 @@ static bool bChkCardRxFlg;
 
 char card_no2[21], PId_no2[21];
 
+
+//Long press touchkey at ready = Cancel Charging
+void touchkeyReadyPress(bool longPush)
+{
+	if(longPush)
+	{	
+		charge_stop_btnState[bDevChannel] = 1;
+		shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
+		CtLogRed("Charge Canceled by Button");
+		StopCharge();
+		WattHourMeterStopMonitoring(bDevChannel);
+		shmDataAppInfo.charge_comp_status = END_BTN;
+	
+		TopCloseTimer();
+		ShowInfoDialogBox(EVENT_CANCEL);
+	}
+}
+
+//Long press touchkey = Stop Charging
 void touchkeyChargePress(bool longPush)
 {
 	if(longPush)
-	{
-		if (sCharging) 
-		{		
-			charge_stop_btnState[bDevChannel] = 1;
-			shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
-			CtLogRed("Charge Stop by Button");
-			StopCharge();
-			WattHourMeterStopMonitoring(bDevChannel);
-			shmDataAppInfo.charge_comp_status = END_BTN;
-		}
+	{	
+		charge_stop_btnState[bDevChannel] = 1;
+		shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
+		CtLogRed("Charge Stop by Button");
+		StopCharge();
+		WattHourMeterStopMonitoring(bDevChannel);
+		shmDataAppInfo.charge_comp_status = END_BTN;
 	
-	TopCloseTimer();
-	UpdateStopGui();
-
+		TopCloseTimer();
+		UpdateStopGui();
+		TSCT_ChargingStop();
 	}
-		// StopCharge();
 }
 
 static void GotoNextLayerOnCharge(void)
@@ -586,105 +601,107 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		// Sever Connection Check
 
 		if(CstGetMcstatus() == true)  //6V + Charging
+		{
 			while(bAmiErrChk && !CstGetEpqStatus(TSCT_COM_WHM))
 			{	//AMI not working
 				CstSetEpqStatus(TSCT_COM_WHM, false);
 				// EventCode_buf |= 1 << EVE_AMI;
 				usleep(100*1000);				
 			}
+
+			chk_Volt = TSCTGetAMIVolt();
+			LimitVolt_Average = (LimitVolt_Average * 4 + chk_Volt) / 5;
+			chk_Current = TSCTGetAMICurrent();
+			chk_Power = ((uint32_t)LimitVolt_Average * (uint32_t)chk_Current) / 1000;
+
+			if(chk_Current > limit_over_current)	Fault_Count[0]++;	
+			else	Fault_Count[0] = 0;
+			if(chk_Volt > LIMIT_OV_VOLT)	Fault_Count[1]++;	
+			else	Fault_Count[1] = 0;
+			if(chk_Volt < LIMIT_UD_VOLT)	Fault_Count[2]++;	
+			else	Fault_Count[2] = 0;
+			if(ChargerTemperate > 80)		Fault_Count[3]++;
+			else	Fault_Count[3] = 0;
+
+			if(chk_Power > limit_over_power) Fault_Count[4]++;
+			else Fault_Count[4] = 0;
+
+			// if(CheckChrgPwr(chk_Current, chk_Volt, currLmtFlg)) Fault_Count[4]++;
+			// else	Fault_Count[4] = 0;
+			// if(currLmtFlg && (chk_Current > (uint16_t)((currLmtAmp+1) * 100))) Fault_Count[5]++;		// 설정 전류의 3% 초과해서 전류 가져가는 차량 존재
+			// else	Fault_Count[5] = 0;		
+			
+			if(Fault_Count[0] > 10){ 
+				CtLogRed("Charge Over Current Fault!!!!!!!!!!!!!!!!!!!");
+				Fault_Count[0] = 0;
+				Fault_Count[1] = 0;
+				Fault_Count[2] = 0;
+				shmDataAppInfo.charge_comp_status = END_ERR;
+				CstSetEpqStatus(TSCT_OUT_OVER_CURRENT, false);
+				ShowWhmErrorDialogBox(ERR_OV_CURT);
+				// EventCode_buf |= 1 << EVE_OVC;
+			}
+			if(Fault_Count[1] > 10){ 
+				CtLogRed("Charge Over Voltage Fault!!!!!!!!!!!!!!!!!!!");		
+				Fault_Count[0] = 0;
+				Fault_Count[1] = 0;
+				Fault_Count[2] = 0;
+				shmDataAppInfo.charge_comp_status = END_ERR;
+				CstSetEpqStatus(TSCT_OUT_OVER_VOLTAGE, false);
+				ShowWhmErrorDialogBox(ERR_OV_VOLT);
+				// EventCode_buf |= 1 << EVE_OVV;
+			}
+			if(Fault_Count[2] > 10){ 
+				CtLogRed("Charge Under Voltage Fault!!!!!!!!!!!!!!!!!!!");
+				Fault_Count[0] = 0;
+				Fault_Count[1] = 0;
+				Fault_Count[2] = 0;
+				shmDataAppInfo.charge_comp_status = END_ERR;
+				CstSetEpqStatus(TSCT_IN_UNDER_VOLTAGE, false);
+				ShowWhmErrorDialogBox(ERR_UD_VOLT);
+				// EventCode_buf |= 1 << EVE_UDV;
+			}
+			if(Fault_Count[3] > 5){
+				CtLogRed("Over Temperatrue Error!!!!!!!!!!!!!!!!!!!");		
+				sDLsChargeFaultMonitoring = 0;
+				Fault_Count[0] = 0;
+				Fault_Count[1] = 0;
+				Fault_Count[2] = 0;
+				Fault_Count[3] = 0;
+				shmDataAppInfo.charge_comp_status = END_ERR;
+				CstSetEpqStatus(TSCT_OVER_TEMP, false);
+				ShowWhmErrorDialogBox(ERR_TEMP);
+				// EventCode_buf |= 1 << EVE_TEMP;			
+			}
+
+			if(Fault_Count[4] > 5)	//변화되는 시간만큼
+			{
+				// CtLogRed("Over Setting Power!! Current %u A / Volt %u V !!!!!!!!", chk_Current, chk_Volt);
+
+				// currLmtFlg = true;
+
+				if(theConfig.forcePowerLimit) // v1.4.1 - 강제전력제한 기능 ON/OFF  24.10.25 JGLEE
+				{
+					// test here
+					// SetPwm(29);
+					Powerlimit_current(bDevChannel, LimitVolt_Average);
+					Power_Fault_Packet = false;
+				}
+
+				if(!Power_Fault_Packet)
+				{
+					Power_Fault_Packet = true;
+
+					CstSetEpqStatus(TSCT_OVER_POWER, false);
+					// EventCode_buf |= 1 << EVE_OVP;
+				}
+
+				Fault_Count[4] = 0;
+			}
+
+			//CtLogYellow("ChargeFault Cnt : %d / Current : %d, Volt : %d ", Fault_Count, chk_Current, chk_Volt);
+		}
 		else CstSetEpqStatus(TSCT_COM_WHM, true);
-
-		chk_Volt = TSCTGetAMIVolt();
-		LimitVolt_Average = (LimitVolt_Average * 4 + chk_Volt) / 5;
-		chk_Current = TSCTGetAMICurrent();
-		chk_Power = ((uint32_t)LimitVolt_Average * (uint32_t)chk_Current) / 1000;
-
-		if(chk_Current > limit_over_current)	Fault_Count[0]++;	
-		else	Fault_Count[0] = 0;
-		if(chk_Volt > LIMIT_OV_VOLT)	Fault_Count[1]++;	
-		else	Fault_Count[1] = 0;
-		if(chk_Volt < LIMIT_UD_VOLT)	Fault_Count[2]++;	
-		else	Fault_Count[2] = 0;
-		if(ChargerTemperate > 80)		Fault_Count[3]++;
-		else	Fault_Count[3] = 0;
-
-		if(chk_Power > limit_over_power) Fault_Count[4]++;
-		else Fault_Count[4] = 0;
-
-		// if(CheckChrgPwr(chk_Current, chk_Volt, currLmtFlg)) Fault_Count[4]++;
-		// else	Fault_Count[4] = 0;
-		// if(currLmtFlg && (chk_Current > (uint16_t)((currLmtAmp+1) * 100))) Fault_Count[5]++;		// 설정 전류의 3% 초과해서 전류 가져가는 차량 존재
-		// else	Fault_Count[5] = 0;		
-		
-		if(Fault_Count[0] > 10){ 
-			CtLogRed("Charge Over Current Fault!!!!!!!!!!!!!!!!!!!");
-			Fault_Count[0] = 0;
-			Fault_Count[1] = 0;
-			Fault_Count[2] = 0;
-			shmDataAppInfo.charge_comp_status = END_ERR;
-			CstSetEpqStatus(TSCT_OUT_OVER_CURRENT, false);
-			ShowWhmErrorDialogBox(ERR_OV_CURT);
-			// EventCode_buf |= 1 << EVE_OVC;
-		}
-		if(Fault_Count[1] > 10){ 
-			CtLogRed("Charge Over Voltage Fault!!!!!!!!!!!!!!!!!!!");		
-			Fault_Count[0] = 0;
-			Fault_Count[1] = 0;
-			Fault_Count[2] = 0;
-			shmDataAppInfo.charge_comp_status = END_ERR;
-			CstSetEpqStatus(TSCT_OUT_OVER_VOLTAGE, false);
-			ShowWhmErrorDialogBox(ERR_OV_VOLT);
-			// EventCode_buf |= 1 << EVE_OVV;
-		}
-		if(Fault_Count[2] > 10){ 
-			CtLogRed("Charge Under Voltage Fault!!!!!!!!!!!!!!!!!!!");
-			Fault_Count[0] = 0;
-			Fault_Count[1] = 0;
-			Fault_Count[2] = 0;
-			shmDataAppInfo.charge_comp_status = END_ERR;
-			CstSetEpqStatus(TSCT_IN_UNDER_VOLTAGE, false);
-			ShowWhmErrorDialogBox(ERR_UD_VOLT);
-			// EventCode_buf |= 1 << EVE_UDV;
-		}
-		if(Fault_Count[3] > 5){
-			CtLogRed("Over Temperatrue Error!!!!!!!!!!!!!!!!!!!");		
-			sDLsChargeFaultMonitoring = 0;
-			Fault_Count[0] = 0;
-			Fault_Count[1] = 0;
-			Fault_Count[2] = 0;
-			Fault_Count[3] = 0;
-			shmDataAppInfo.charge_comp_status = END_ERR;
-			CstSetEpqStatus(TSCT_OVER_TEMP, false);
-			ShowWhmErrorDialogBox(ERR_TEMP);
-			// EventCode_buf |= 1 << EVE_TEMP;			
-		}
-
-		if(Fault_Count[4] > 5)	//변화되는 시간만큼
-		{
-			// CtLogRed("Over Setting Power!! Current %u A / Volt %u V !!!!!!!!", chk_Current, chk_Volt);
-
-			// currLmtFlg = true;
-
-			if(theConfig.forcePowerLimit) // v1.4.1 - 강제전력제한 기능 ON/OFF  24.10.25 JGLEE
-			{
-				// test here
-				// SetPwm(29);
-				Powerlimit_current(bDevChannel, LimitVolt_Average);
-				Power_Fault_Packet = false;
-			}
-
-			if(!Power_Fault_Packet)
-			{
-				Power_Fault_Packet = true;
-
-				CstSetEpqStatus(TSCT_OVER_POWER, false);
-				// EventCode_buf |= 1 << EVE_OVP;
-			}
-
-			Fault_Count[4] = 0;
-		}
-
-		//CtLogYellow("ChargeFault Cnt : %d / Current : %d, Volt : %d ", Fault_Count, chk_Current, chk_Volt);
 	}
 	sChargeFaultMonitoringTask = 0;
 }
@@ -740,6 +757,7 @@ void StopCharge(void)
 	usleep(300*1000);
 }
 
+//Update gui to stop charging and go finish layer
 static void UpdateStartGui()
 {	
 	if(!sChargeSpritebool)
@@ -757,6 +775,8 @@ static void UpdateStartGui()
 
 }
 
+
+//Update gui to stop charging and go finish layer
 void UpdateStopGui()
 {
 	ituSpriteStop(sChargeSprite);
@@ -778,6 +798,7 @@ void UpdateStopGui()
 	GotoNextLayerOnCharge();
 }
 
+//Check CP Voltage and do actions for current voltage
 static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltage)
 {
 	if(EmgControl) return;
@@ -807,7 +828,8 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 				// if (sCharging){ 	
 					if(CstGetMcstatus()){	
 						MagneticContactorOff();	
-						StartStopCharging(1, ch);
+						// StartStopCharging(1, ch);
+						SetStopChargingTimer(true);
 						chargecomp_stop = true;
 						SetCpStatus(CP_STATUS_CODE_SUSPENDEDEV,bDevChannel+1);
 					}
@@ -817,22 +839,8 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 			
 		case CP_VOLTAGE_9V:
 		#if USE_SECC
-			if(SeccRxData.stcode == CSM_STAT_PAUSESESSION)
-			{  //Pause charging
-				if (sCharging)
-				{ 	
-					SetStopChargingTimer(true);
-					shmDataAppInfo.app_order = APP_ORDER_CHARGE_READY;
-					if(CstGetMcstatus())
-					{	
-						MagneticContactorOff();	
-						StartStopCharging(1, ch);
-						chargecomp_stop = true;
-					}
-				}
-			}
-			//Stop charging
-			else if( SeccRxData.stcode == CSM_STAT_FAILURESTOP )
+			//Stop charging by error
+			if( SeccRxData.stcode == CSM_STAT_FAILURESTOP )
 			{   //TODO: Need to open MC in 100ms
 				chargecomp_stop = false;			
 				shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
@@ -845,6 +853,7 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 				// }
 				GotoNextLayerOnCharge();
 			}
+			//Stop charging normally
 			else if(SeccRxData.stcode == CSM_STAT_NARMALSTOP || SeccRxData.stcode == CSM_STAT_STOPCHRG)
 			{   // Stop by car?
 				chargecomp_stop = false;			
@@ -858,26 +867,52 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 				// }
 				GotoNextLayerOnCharge();
 			}
-		#else
+			//Pause charging
+			else if(SeccRxData.stcode == CSM_STAT_PAUSESESSION)
+			{
 				if (sCharging)
-				{ 	//Pause charging
+				{ 	
 					SetStopChargingTimer(true);
 					shmDataAppInfo.app_order = APP_ORDER_CHARGE_READY;
-					if(CstGetMcstatus())
-					{	
-						MagneticContactorOff();	
-						StartStopCharging(1, ch);
-						chargecomp_stop = true;
-					}
+
+					MagneticContactorOff();	
+					// StartStopCharging(1, ch);
+					// SetStopChargingTimer(true);
+					chargecomp_stop = true;
 				}
+			}
+			//Not Started
+			else
+			{
+				SetStopChargingTimer(true);
+				shmDataAppInfo.app_order = APP_ORDER_CHARGE_READY;	
+			}
+		#else
+
+			SetStopChargingTimer(true);
+			shmDataAppInfo.app_order = APP_ORDER_CHARGE_READY;
+
+			if (sCharging)
+			{ 	//Pause charging
+				if(CstGetMcstatus())
+				{	
+					MagneticContactorOff();	
+					// StartStopCharging(1, ch);
+					SetStopChargingTimer(true);
+					chargecomp_stop = true;
+				}
+			}
+			//else, Not started, but no more actions need
 		#endif
 			break;
 
 		case CP_VOLTAGE_6V:
 			if(!EmgControl && !CsConfigVal.bReqRmtStopTSFlg)
 			{
+				SetStopChargingTimer(false);
+
 				if (!sCharging && (charge_stop_btnState[bDevChannel] == 0)) 
-				{
+				{	//Start charge first time
 					// if(sChCharging == false)
 					AudioPlay("A:/sounds/startCharge.wav", NULL);
 						
@@ -886,18 +921,17 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 					{
 						StartTimeCheck = false;
 						gettimeofday(&stv, NULL);
-					}		
+					}
 					StartCharge();
 					UpdateStartGui();
 				}
 				else
 				{	
 					if(!CstGetMcstatus() && (charge_stop_btnState[bDevChannel] == 0))	
-					{
+					{	//Resume Charging
 						chargecomp_stop = false;
 						MagneticContactorOn();
-						StartStopCharging(0, ch);
-						SetStopChargingTimer(false);
+						// StartStopCharging(0, ch);
 					}
 				}
 			}
@@ -1149,6 +1183,7 @@ bool ChargeOnEnter(ITUWidget* widget, char* param)
 
 	ConfigSave();
 
+	setTouchKeyListener(touchkeyReadyPress, APP_ORDER_CHARGE_READY);
 	setTouchKeyListener(touchkeyChargePress, APP_ORDER_CHARGING);
 
     return true;
@@ -1162,6 +1197,7 @@ bool ChargeOnLeave(ITUWidget* widget, char* param)
 	char buf[8]={0x30,};
 
 	#if USE_SECC
+	//Set Secc status
 	SeccTxData.status_fault &= ~(1<<SECC_STAT_CHARG);
 	SeccTxData.status_fault |= 1<<SECC_STAT_STOP;
 	#endif
