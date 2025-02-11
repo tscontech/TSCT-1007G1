@@ -59,8 +59,8 @@ char StrModelName[20];
 //#define	SW_VERSION 		"V1.0.3"  // 2019.11.29 iksung is-200 _dsAn
 //#define	SW_VERSION 		"V1.0.5"  // 2020.01.29 tesla issue and init config issue by ktlee
 								  // 2020.02.26 RFID error dialog
-#define	SW_VERSION 		"V2.3.0" // watthourmeter noise driver & checksum 2020.10.12 srkim
-#define	CERTI_SW_VERSION 		"02.03.00" // 20200928 ktlee for certification
+#define	SW_VERSION 		"V1.0.0" // watthourmeter noise driver & checksum 2020.10.12 srkim
+#define	CERTI_SW_VERSION 		"01.00.00" // 20200928 ktlee for certification
 
 #if defined(OBD_MODEL)
 	#define SW_MODEL			OBD_MODEL
