@@ -213,6 +213,10 @@ int page;                   //Which page is showing?
 
 extern bool bAmiErrChk;     //for check ami test
 
+/**
+ * @brief Reset match variables for regex. It will reset group output too.
+ * 
+ */
 void resetMatch()
 {
     for(int i = 0; i < REGEX_MAXMATCH; ++i)
@@ -222,6 +226,10 @@ void resetMatch()
     }
 }
 
+/**
+ * @brief Debug function for regex
+ * 
+ */
 void printMatch()
 {
     printf("[printMatch]\nMatch = (%d, %d)\n", regMatch[0].rm_so, regMatch[0].rm_eo);
@@ -911,6 +919,9 @@ void saveValue()
     // ituWidgetSetVisible(nowBackground, true);
 }
 
+/**
+ * @brief Try update via FTP server
+ */
 void updateViaFTP()
 {
     DEBUGPRINT("Update Enter");
@@ -981,6 +992,11 @@ void updateViaFTP()
 	while(1);
 }
 
+/**
+ * @brief Number key control for network background
+ * 
+ * @param code inputted keycode
+ */
 void runNumber_NET(uint32_t code)
 {
     DEBUGPRINT("code = %d", code);
@@ -1035,6 +1051,11 @@ void runNumber_NET(uint32_t code)
     return;
 }
 
+/**
+ * @brief Number key control for system background
+ * 
+ * @param code inputted keycode
+ */
 void runNumber_SYS(uint32_t code)
 {
     DEBUGPRINT("code = %d", code);
@@ -1165,6 +1186,11 @@ void runNumber_INFO(uint32_t code)
     return;
 }
 
+/**
+ * @brief Number key control for test communication background
+ * 
+ * @param code inputted keycode
+ */
 void runNumber_TEST_COMM(uint32_t code)
 {
     uint32_t amiBuf;
@@ -1252,6 +1278,11 @@ void runNumber_TEST_COMM(uint32_t code)
     }
 }
 
+/**
+ * @brief Number key control for test io background
+ * 
+ * @param code inputted keycode
+ */
 void runNumber_TEST_IO(uint32_t code)
 {
     DEBUGPRINT("code = %d", code);
@@ -1308,6 +1339,12 @@ void runNumber_TEST_IO(uint32_t code)
     }
 }
 
+/**
+ * @brief Keyboard callback function that controls layer
+ * 
+ * @param flag Is KEYUP or KEYDOWN
+ * @param code Pressed key's code
+ */
 void keyboardControl(uint32_t flag, uint32_t code)
 {
     DEBUGPRINT("Flag : %d Code : %d\n", flag, code);
@@ -1450,7 +1487,14 @@ void keyboardControl(uint32_t flag, uint32_t code)
 
 
 
-
+/**
+ * @brief Initialize layer when entered
+ * 
+ * @param widget Library Auto Uses it
+ * @param param Library Auto Uses it
+ * @return true Library Auto Uses it
+ * @return false Library Auto Uses it
+ */
 bool AdminKeyboardEnter(ITUWidget* widget, char* param)
 {
     char buf[100];
