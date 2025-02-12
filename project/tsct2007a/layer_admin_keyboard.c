@@ -1684,7 +1684,7 @@ bool AdminKeyboardEnter(ITUWidget* widget, char* param)
 
     modelText = ituSceneFindWidget(&theScene, "ModelText");
     assert(modelText);
-    ituTextSetString(modelText, SECC_MODEL);
+    ituTextSetString(modelText, SW_MODEL);
 
     infoPrice1Text = ituSceneFindWidget(&theScene, "InfoPrice1Text");
     assert(infoPrice1Text);

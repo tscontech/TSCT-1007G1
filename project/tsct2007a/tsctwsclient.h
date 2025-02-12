@@ -55,7 +55,7 @@
 
 #define MAX_CONECTOR_ID			1
 
-#define MAX_CFG 24
+#define MAX_CFG 22
 
 #define METER_VAL_SAMP_TYPE		1
 #define METER_VAL_CLOCK_TYPE	2

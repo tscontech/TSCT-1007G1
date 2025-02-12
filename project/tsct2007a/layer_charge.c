@@ -915,7 +915,7 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 				{	//Start charge first time
 					// if(sChCharging == false)
 					AudioPlay("A:/sounds/startCharge.wav", NULL);
-						
+					SetCpStatus(CP_STATUS_CODE_CHARGING, 1);//Is really needed?
 					shmDataAppInfo.app_order = APP_ORDER_CHARGING;
 					if(StartTimeCheck)
 					{

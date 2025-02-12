@@ -102,17 +102,16 @@ char ocppConfigKeyName[MAX_CFG][40] =
 	"TransactionMessageAttempts",
 	"TransactionMessageRetryInterval",
 	"UnlockConnectorOnEVSideDisconnect",
+	"AllowOfflineTxForUnknownId",
 	// "Local",
 	// "LocalAuthListEnabled",
-	"LocalAuthListMaxLength",
-	"SendLocalListMaxLength",
+	// "LocalAuthListMaxLength",
+	// "SendLocalListMaxLength",
 	// "Smart",
 	// "ChargeProfileMaxStackLevel",
 	// "ChargingScheduleAllowedChargingRateUnit",
 	// "ChargingScheduleMaxPeriods",
 	// "MaxChargingProfilesInstalled"
-
-	"AllowOfflineTxForUnknownId",
 };
 
 long lastClockTvSec = 0;
@@ -310,34 +309,34 @@ static CURLcode WS_Server_connect(void)
 	char ConnURLAddr_buf[120];
 	char chBuf[15];
 
-	FILE *cerFile;
+	// FILE *cerFile;
 
-	int length=0;
+	// int length=0;
 
-	char* mem;
+	// char* mem;
 
-	// FILE *keyFile;
+	// // FILE *keyFile;
 
-	// char *keyName;
+	// // char *keyName;
 
-	// open
-	printf("fopen : B:/csms-0725_68.pem\r\n");
-	cerFile = fopen("B:/csms-0725_68.pem", "r");
+	// // open
+	// printf("fopen : B:/csms-0725_68.pem\r\n");
+	// cerFile = fopen("B:/csms-0725_68.pem", "r");
 
-	// fseek(cerFile, 0, SEEK_END);
+	// // fseek(cerFile, 0, SEEK_END);
 
-	// length = ftell(cerFile);
+	// // length = ftell(cerFile);
 
-	// fseek(cerFile, 0, SEEK_SET);
+	// // fseek(cerFile, 0, SEEK_SET);
 
-	// mem = malloc(length);
-	// ret = fread(mem, 1, length, cerFile);
-	// fclose(cerFile);
+	// // mem = malloc(length);
+	// // ret = fread(mem, 1, length, cerFile);
+	// // fclose(cerFile);
 
-	if(cerFile == NULL) 
-	{
-		printf("file is not exist\n");
-	}
+	// if(cerFile == NULL) 
+	// {
+	// 	printf("file is not exist\n");
+	// }
 
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
@@ -482,7 +481,7 @@ static CURLcode WS_Server_connect(void)
 		}
 	}
 
-	fclose(cerFile);    
+	// fclose(cerFile);    
     return ret;
 }
 
@@ -1197,6 +1196,28 @@ static bool OCPP_CALL_Senario(void)
 			default:
 				break;
 		}
+		/*
+		// CP Status : Prepare  //전송 순서 변경(StaNoti 이후 StartTs) 테스트 - JGLEE 2024/11/04
+		if(startTsQ.reqStartTsFlg){
+			MakeDataCmd_StartTs();
+			// CsConfigVal.bReqStartTsNo = 0;
+			return true;
+		}
+		*/
+		if(CsConfigVal.bReqStopTsFlg)
+		{  //전송 순서 변경(StaNoti 이후 StartTs) 테스트 - JGLEE 2024/11/04
+			MakeDataCmd_StopTs();
+			// CsConfigVal.bReqStopTsFlg = false;
+			return true;
+		}
+
+		if((theConfig.chargingstatus & (1<<(MAX_CONECTOR_ID+1))) \
+		&& (shmDataAppInfo.app_order == APP_ORDER_WAIT) )
+		{
+			MakeDataCmd_StopTs();
+
+			return true;
+		}
 		
 		if(SendVasData(&seccVasDataCnt, TSCT_ERR_CODE_SECCBATDATA))
 			return true;
@@ -1354,7 +1375,7 @@ static void* WSClientThread(void* arg)
 
 			Reset_Time(&tv_2);
 
-			SetCpStatus(CP_STATUS_CODE_CHARGING, bDevChannel+1);
+			// SetCpStatus(CP_STATUS_CODE_CHARGING, bDevChannel+1);
 		}
 
 		meterValType = Check_Meter_Time(&tv_2);
@@ -1542,6 +1563,11 @@ void Init_CfgKey(void)
 	CfgKeyVal[20].CfgKeyRw = false;
 	CfgKeyVal[20].CfgKeyType = TYPE_CODE_BOOL;
 	CfgKeyVal[20].CfgKeyDataInt = true;		
+	
+	// AllowOfflineTxForUnknownId	
+	CfgKeyVal[21].CfgKeyRw = false;
+	CfgKeyVal[21].CfgKeyType = TYPE_CODE_BOOL;
+	CfgKeyVal[21].CfgKeyDataInt = true;
 
 	//Local Auth List Management
 
@@ -1551,19 +1577,14 @@ void Init_CfgKey(void)
 	// CfgKeyVal[21].CfgKeyDataInt = false;		
 
 	// memcpy(CfgKeyVal[21].CfgKeyName, "LocalAuthListMaxLength", sizeof("LocalAuthListMaxLength"));
-	CfgKeyVal[21].CfgKeyRw = true;
-	CfgKeyVal[21].CfgKeyType = TYPE_CODE_INT;
-	CfgKeyVal[21].CfgKeyDataInt = 5;
+	// CfgKeyVal[21].CfgKeyRw = true;
+	// CfgKeyVal[21].CfgKeyType = TYPE_CODE_INT;
+	// CfgKeyVal[21].CfgKeyDataInt = 5;
 
 	// memcpy(CfgKeyVal[22].CfgKeyName, "SendLocalListMaxLength", sizeof("SendLocalListMaxLength"));
-	CfgKeyVal[22].CfgKeyRw = true;
-	CfgKeyVal[22].CfgKeyType = TYPE_CODE_INT;
-	CfgKeyVal[22].CfgKeyDataInt = 5;	
-
-	// AllowOfflineTxForUnknownId	
-	CfgKeyVal[23].CfgKeyRw = false;
-	CfgKeyVal[23].CfgKeyType = TYPE_CODE_BOOL;
-	CfgKeyVal[23].CfgKeyDataInt = true;
+	// CfgKeyVal[22].CfgKeyRw = true;
+	// CfgKeyVal[22].CfgKeyType = TYPE_CODE_INT;
+	// CfgKeyVal[22].CfgKeyDataInt = 5;	
 
 	// //Smart Charging Profile
 
