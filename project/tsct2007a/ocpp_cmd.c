@@ -701,7 +701,7 @@ void MakeDataCmd_MeterVal(void)
 	// Tx_Msg.UniqueID = CstGetTime_Msec_test();
 	Tx_Msg.UniqueID = MeterValQ[0].Uid_Mv;
 
-    Tx_Msg.Payload_len = 3;
+    // Tx_Msg.Payload_len = 3;
 
 	Tx_Msg.Action_Code = CP_REQ_ACTION_CODE_METERVAL;
 
@@ -711,6 +711,10 @@ void MakeDataCmd_MeterVal(void)
 	memset(Tx_Msg.Payload[0].property_contants, 0x00, sizeof(Tx_Msg.Payload[0].property_contants));
 	sprintf(Tx_Msg.Payload[0].property_contants,"%d",MeterValQ[0].Connect_Id);
 	Tx_Msg.Payload[0].data_type = TYPE_CODE_INT;
+
+	if(MeterValQ[0].Meterval_Flg != METER_VAL_TRIG_TYPE)
+	{
+		Tx_Msg.Payload_len = 3;
 
     	memset(Tx_Msg.Payload[1].property_name, 0x00, sizeof(Tx_Msg.Payload[1].property_name));
 		memcpy(Tx_Msg.Payload[1].property_name, "transactionId",sizeof("transactionId"));
@@ -738,6 +742,29 @@ void MakeDataCmd_MeterVal(void)
 			sprintf((Tx_Msg.Payload[2].sub_Payload)->property_contants, "{\"timestamp\":\"%s\",\"sampledValue\":[{\"value\":\"%lu\",\"measurand\":\"Energy.Active.Import.Register\",\"context\":\"Sample.Periodic\",\"unit\":\"Wh\"}]}", MeterValQ[0].Time_Stamp, MeterValQ[0].Sampled_Val);
 		else if(MeterValQ[0].Meterval_Flg == METER_VAL_TRIG_TYPE)
 			sprintf((Tx_Msg.Payload[2].sub_Payload)->property_contants, "{\"timestamp\":\"%s\",\"sampledValue\":[{\"value\":\"%lu\",\"measurand\":\"Energy.Active.Import.Register\",\"context\":\"Trigger\",\"unit\":\"Wh\"}]}", MeterValQ[0].Time_Stamp, MeterValQ[0].Sampled_Val);
+	}
+	else
+	{	//Triggered MeterValue Must not have TransactionID
+		Tx_Msg.Payload_len = 2;
+		
+		memset(Tx_Msg.Payload[1].property_name, 0x00, sizeof(Tx_Msg.Payload[2].property_name));
+		memcpy(Tx_Msg.Payload[1].property_name, "meterValue",sizeof("meterValue"));
+
+		Tx_Msg.Payload[1].data_type = TYPE_CODE_ARR;
+
+		Tx_Msg.Payload[1].sub_Payload = tx_sub_Payload;
+		Tx_Msg.Payload[1].subPayload_len = 1;
+
+		sprintf((Tx_Msg.Payload[1].sub_Payload)->property_contants, "{\"timestamp\":\"%s\",\"sampledValue\":[{\"value\":\"%lu\"}]}", MeterValQ[0].Time_Stamp, MeterValQ[0].Sampled_Val);
+		printf("[MakeDataCmd_MeterVal] %s \r\n", (Tx_Msg.Payload[1].sub_Payload)->property_contants);
+		
+		if(MeterValQ[0].Meterval_Flg == METER_VAL_CLOCK_TYPE)
+			sprintf((Tx_Msg.Payload[1].sub_Payload)->property_contants, "{\"timestamp\":\"%s\",\"sampledValue\":[{\"value\":\"%lu\",\"measurand\":\"Energy.Active.Import.Register\",\"context\":\"Sample.Clock\",\"unit\":\"Wh\"}]}", MeterValQ[0].Time_Stamp, MeterValQ[0].Sampled_Val);
+		else if(MeterValQ[0].Meterval_Flg == METER_VAL_SAMP_TYPE)
+			sprintf((Tx_Msg.Payload[1].sub_Payload)->property_contants, "{\"timestamp\":\"%s\",\"sampledValue\":[{\"value\":\"%lu\",\"measurand\":\"Energy.Active.Import.Register\",\"context\":\"Sample.Periodic\",\"unit\":\"Wh\"}]}", MeterValQ[0].Time_Stamp, MeterValQ[0].Sampled_Val);
+		else if(MeterValQ[0].Meterval_Flg == METER_VAL_TRIG_TYPE)
+			sprintf((Tx_Msg.Payload[1].sub_Payload)->property_contants, "{\"timestamp\":\"%s\",\"sampledValue\":[{\"value\":\"%lu\",\"measurand\":\"Energy.Active.Import.Register\",\"context\":\"Trigger\",\"unit\":\"Wh\"}]}", MeterValQ[0].Time_Stamp, MeterValQ[0].Sampled_Val);
+	}
 }
 
 void DataProcCmd_MeterVal(void)
