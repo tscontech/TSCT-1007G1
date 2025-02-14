@@ -634,7 +634,7 @@ bool Tsct_Curl_Ws_Recv(void)
 	CURLcode ret = 1;
 	size_t rlen;
 	struct curl_ws_frame* meta;
-
+	memset(curl_ws_recv_buf, 0, sizeof(curl_ws_recv_buf));  //init buffer
 	ret = curl_ws_recv(curl, curl_ws_recv_buf, sizeof(curl_ws_recv_buf), &rlen, &meta);
 	if(ret == CURLE_AGAIN) {
 		return false;
@@ -1108,7 +1108,7 @@ static bool OCPP_CALL_Senario(void)
 			// CsConfigVal.bReqStartTsNo = 0;
 			return true;
 		}
-
+		/*
 		if(CsConfigVal.bReqStopTsFlg){
 			MakeDataCmd_StopTs();
 			// CsConfigVal.bReqStopTsFlg = false;
@@ -1121,6 +1121,7 @@ static bool OCPP_CALL_Senario(void)
 
 			return true;
 		}
+		*/
 
 		if(CsConfigVal.bReqEmgBtnFlg){
 			MakeDataCmd_DataTransCp(TSCT_ERR_CODE_EMG);
