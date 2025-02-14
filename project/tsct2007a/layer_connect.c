@@ -118,7 +118,6 @@ static void CPListenerOnConnect(int ch, unsigned char nAdcValue, CPVoltage volta
 		break;
 			
 		case CP_VOLTAGE_9V:  /* fall-through */
-		case CP_VOLTAGE_6V:
 
 			CsConfigVal.bReqStartTsNo = bDevChannel + 1;
 			// while(GetCpStatus(bDevChannel+1) == CP_STATUS_CODE_PREPARE) 
@@ -145,10 +144,10 @@ static void CPListenerOnConnect(int ch, unsigned char nAdcValue, CPVoltage volta
 				// break;				
 			// }					
 
-		break;
+			break;
 
-		// case CP_VOLTAGE_6V:   6V일 때 충전이 불가능할 이유가 있을까...? JGLEE 24.12.17
-		break;	
+		case CP_VOLTAGE_6V:
+			break;	
 	}
 }
 

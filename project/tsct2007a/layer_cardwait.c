@@ -97,33 +97,33 @@ static void* sWaitMonitoringTaskFuntion(void* arg)
 				ituWidgetSetVisible(scardWaitTxtIcon_succ, true);
 
 				// if First Connection, Request Start Transaction
-				if(GetCpStatus(bDevChannel+1) == CP_STATUS_CODE_PREPARE)
-				{	
-					if(CsConfigVal.bReqStartTsNo == 0)
-						CsConfigVal.bReqStartTsNo = bDevChannel + 1;
-					// be Rejected Requesting Start Transaction
-					// else if(CsConfigVal.bReqStartTsNo == (2*MAX_CONECTOR_ID + bDevChannel + 1)){	
-					// 	printf("#########Receive Error Go to Main [%d]#######\r\n",CsConfigVal.bReqStartTsNo);
-					// 	// if(PlayConnectSprite_flag) StopConnectSprite();	
-					// 	StopWaitMonitoringTask();
-					// 	CsConfigVal.bReqStartTsNo = 0;
-					// 	GotoStartLayer();				
-					// }
-					printf("#########Waitting Ok Receive [%d]#######\r\n",CsConfigVal.bReqStartTsNo);
-				}
-				else if(GetCpStatus(bDevChannel+1) == CP_STATUS_CODE_CHARGING){				// for Accept to Start Transaction
-					printf("#########Receive Ok Go to Charge [%d]#######\r\n",CsConfigVal.bReqStartTsNo);
-					// if(PlayConnectSprite_flag) StopConnectSprite();	
-					StopWaitMonitoringTask();
-					CsConfigVal.bReqStartTsNo = 0;
-					GotoChargeLayer();
-				}
-				else{
+				// if(GetCpStatus(bDevChannel+1) == CP_STATUS_CODE_PREPARE)
+				// {	
+				// 	if(CsConfigVal.bReqStartTsNo == 0)
+				// 		CsConfigVal.bReqStartTsNo = bDevChannel + 1;
+				// 	// be Rejected Requesting Start Transaction
+				// 	// else if(CsConfigVal.bReqStartTsNo == (2*MAX_CONECTOR_ID + bDevChannel + 1)){	
+				// 	// 	printf("#########Receive Error Go to Main [%d]#######\r\n",CsConfigVal.bReqStartTsNo);
+				// 	// 	// if(PlayConnectSprite_flag) StopConnectSprite();	
+				// 	// 	StopWaitMonitoringTask();
+				// 	// 	CsConfigVal.bReqStartTsNo = 0;
+				// 	// 	GotoStartLayer();				
+				// 	// }
+				// 	printf("#########Waitting Ok Receive [%d]#######\r\n",CsConfigVal.bReqStartTsNo);
+				// }
+				// else if(GetCpStatus(bDevChannel+1) == CP_STATUS_CODE_CHARGING){				// for Accept to Start Transaction
+				// 	printf("#########Receive Ok Go to Charge [%d]#######\r\n",CsConfigVal.bReqStartTsNo);
+				// 	// if(PlayConnectSprite_flag) StopConnectSprite();	
+				// 	StopWaitMonitoringTask();
+				// 	CsConfigVal.bReqStartTsNo = 0;
+				// 	GotoChargeLayer();
+				// }
+				// else{
 					SetCpStatus(CP_STATUS_CODE_PREPARE, bDevChannel+1);
 					StopWaitMonitoringTask();
 					sleep(1);
 					WaitToConnectLayer();
-				}
+				// }
 			}
 			else if(shmDataIfInfo.card_auth == CARD_AUTH_FAILD)
 			{

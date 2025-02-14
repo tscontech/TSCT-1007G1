@@ -142,17 +142,19 @@ void CPListenerOnAhead(int ch, unsigned char nAdcValue, CPVoltage voltage)
 			break;
 			
 		case CP_VOLTAGE_9V:
-		case CP_VOLTAGE_6V:
-
 			if(bCnctLed == false){
 				bCnctLed = true;
 				LEDOn();
 			}
-
-			cpStatChk = true;
-
-			SetCpStatus(CP_STATUS_CODE_PREPARE, bDevChannel+1);
 			
+			cpStatChk = true;
+			
+			SetCpStatus(CP_STATUS_CODE_PREPARE, bDevChannel+1);
+
+			break;
+			
+		case CP_VOLTAGE_6V:			
+
 			break;
 
 	}
