@@ -44,6 +44,11 @@ void touchKeyTask(void)
 {
     bool now, screenOn = false;
 
+    //Wait for enter main layer. 
+    //Triggering touchkey before entered main layer makes system stucked at boot time.
+    while(shmDataAppInfo.app_order != APP_ORDER_WAIT) usleep(50*1000);;
+    usleep(50*1000);
+
     while(1)
     {
         now = ithGpioGet(GPIO_TOUCHKEY1);
