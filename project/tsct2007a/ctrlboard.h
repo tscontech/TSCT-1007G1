@@ -1330,6 +1330,7 @@ void clearUpdate(void);
 
 bool GetServerCon(void);
 bool GetMeterCon(void);
+bool GetMeterInit(void);
 
 #ifdef	CFG_DYNAMIC_LOAD_TP_MODULE
 void DynamicLoadTpModule(void);

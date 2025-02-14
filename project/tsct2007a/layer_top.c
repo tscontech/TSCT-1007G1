@@ -160,6 +160,11 @@ bool GetMeterCon(void)
 	return !bAmiErrChk;
 }
 
+bool GetMeterInit(void)
+{
+	return GetAMIValue() != -1;
+}
+
 void SetServerCon(void)
 {
 	bool bSet = GetServerCon();

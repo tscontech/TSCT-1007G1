@@ -64,11 +64,11 @@ void touchkeyHomePressed(bool longPush)
 	// 	ShowInfoDialogBox(EVENT_WAIT_SERVER);
 	// 	return;
 	// }
-	// if(GetMeterCon() == false)
-	// {
-	// 	ShowInfoDialogBox(EVENT_WAIT_AMI);
-	// 	return;
-	// }
+	if(GetMeterInit() == false)
+	{
+		ShowInfoDialogBox(EVENT_WAIT_AMI);
+		return;
+	}
 	if(RFIDCardReaderCheck() == true)  // false means no issue (success)
 	{
 		ShowInfoDialogBox(EVENT_WAIT_RFID);
@@ -304,6 +304,9 @@ bool MainOnEnter(ITUWidget* widget, char* param)
 	// For PWM Test
 	// StartPwm(CH1);
 	// LEDOn();
+
+	while(!GetMeterInit()) ;  //Wait for AMI Inited
+	
 	MagneticContactorOff();
     return true;
 }

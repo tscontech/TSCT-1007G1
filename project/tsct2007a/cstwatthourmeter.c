@@ -304,6 +304,19 @@ void WattHourMeterStopMonitoring(ChannelType ch) //
 	CtLogYellow("[WHM#%d] =============>\n", ch);
 }
 
+static void WHMListenerOnInitialize(int ch, float current, float volt, uint32_t energy)
+{
+	char buf[32];	
+
+	if(energy == -1)
+		MagneticContactorOn();
+	else
+	{
+		MagneticContactorOff();
+		WattHourMeterStopMonitoring(0);
+	}
+
+}
 
 void WattHourMeterInit(void){
 
@@ -331,6 +344,9 @@ void WattHourMeterInit(void){
 	}
 	usleep(100*1000);
 	start_read_ami();
+
+	//Read Accumulated power
+	WattHourMeterStartMonitoring(0, WHMListenerOnInitialize);
 }
 
 uint16_t TSCTGetAMIVolt(void)
