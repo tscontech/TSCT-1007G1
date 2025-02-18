@@ -17,6 +17,8 @@ static ITUBackground* sColorTestBackground;
 
 bool TerminalOnEnter(ITUWidget* widget, char* param)
 {
+    bGloAdminStatus = true;
+    
     sInputTextBox = ituSceneFindWidget(&theScene, "InputTextBox");
     assert(sInputTextBox);
 

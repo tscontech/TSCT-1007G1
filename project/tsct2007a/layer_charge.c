@@ -33,6 +33,7 @@
 // #define LIMIT_UD_VOLT	17000		// -20% - 6v
 // #define LIMIT_OV_CURR	3500		// +10%
 // #define LIMIT_OV_CURR	3600		// 7000/198 = 35.353535...
+#define LIMIT_OV_CURR	3640		// 7000/198 = 35.353535...
 
 #define PRICE_LOG_PERIOD_SEC	15
 //-----------------------------------------------------------------------
@@ -572,7 +573,7 @@ static bool CheckChrgPwr(uint16_t chrgCurr, uint16_t chrgVolt, uint8_t currLmtFl
 static void ChargeFaultMonitoringTaskFuntion(void *arg)
 {
 	uint8_t Fault_Count[6] = {0,};						// [0]:Over Current, [1]:Over Voltage, [2]:Under Voltage, [3]:Over Temperture, [4]: Over Power Limit(Cut down), [5]: Over Power Limit(Stop Charging)
-	uint16_t limit_over_current=0, chk_Current=0, chk_Volt=0, LimitVolt_Average=0;
+	uint16_t limit_over_current=0, chk_Current=0, chk_Volt=0, LimitVolt_Average=LIMIT_UD_VOLT;
 	uint32_t limit_over_power=0, chk_Power=0;
 	bool Power_Fault_Packet=false;
 
@@ -582,7 +583,8 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 
 	// uint_fast8_t checkerTick = 0;
 
-	limit_over_current = (uint16_t)theConfig.maxPower * 500;
+	// limit_over_current = (uint16_t)theConfig.maxPower * 500;
+	limit_over_current = (uint16_t)theConfig.maxPower * 520;  //인증용
 	limit_over_power = (uint32_t)theConfig.maxPower * 1000;
 
 	while(sDLsChargeFaultMonitoring)
@@ -602,7 +604,7 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		chk_Volt = TSCTGetAMIVolt();
 		chk_Current = TSCTGetAMICurrent();
 		LimitVolt_Average = (LimitVolt_Average * 4 + chk_Volt) / 5;
-		chk_Power = ((uint32_t)LimitVolt_Average * (uint32_t)chk_Current) / 1000;
+		chk_Power = ((uint32_t)LimitVolt_Average * (uint32_t)chk_Current) / 10000;
 
 		printf("[ChargeFaultMonitoringTaskFuntion] volt = %d / %d, curr = %d / %d, power = %d / %d\n", 
 				chk_Volt, LimitVolt_Average, chk_Current, limit_over_current, chk_Power, limit_over_power);

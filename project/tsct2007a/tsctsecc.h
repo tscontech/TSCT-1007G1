@@ -225,5 +225,8 @@ SECC_CHRG_STEP SeccChrgStep;
 #define SECC_MODE_NOMINAL               3
 
 bool checkSECC();
+bool PLCPowerStatus();
+bool PLCPowerOff();
+bool PLCPowerOn();
 
 #endif

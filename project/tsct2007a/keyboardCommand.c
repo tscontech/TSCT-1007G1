@@ -113,6 +113,17 @@ const int convertToBool(const char* newBool)
 /* ---------------------------------------------------------------------------------- */
 /* ----------------------Data Vaildation Functions(Optional)------------------------- */
 /* ---------------------------------------------------------------------------------- */
+
+/**
+ * @brief Test number for setters
+ * 
+ * @param newNumber New number inputted to textbox. char* type
+ * @param length Max length of digit
+ * @param min Minimum value of new number
+ * @param max Maximum value of new number
+ * @param funcname Optional. Caller function name for logging
+ * @return const int 0 if test PASS else FAIL
+ */
 const int testNumber(const char* newNumber, const int length, const int min, const int max, const char* funcname)
 {
     //Is Digit?
@@ -121,7 +132,7 @@ const int testNumber(const char* newNumber, const int length, const int min, con
         printf("Wrong value for %s : %s\n", funcname, newNumber);
         if(resultTextBox)
         {
-            sprintf(resultBuffer, "%s는 %d자리 숫자입니다.(%s)\n", funcname, length, newNumber);
+            sprintf(resultBuffer, "%s는 %d자리 숫자입니다.(%s)\n", funcname ? funcname : "해당 값", length, newNumber);
             ituTextBoxInput(resultTextBox, resultBuffer);
         }
         return TEST_FAILED_WRONG_VALUE;
@@ -133,7 +144,7 @@ const int testNumber(const char* newNumber, const int length, const int min, con
         printf("Wrong! %d numbers required for DEVID, but %d inputted : %s\n", length, strlen(newNumber), newNumber);
         if(resultTextBox)
         {
-            sprintf(resultBuffer, "%s는 %d자리 숫자입니다.(%s)\n", funcname, length, newNumber);
+            sprintf(resultBuffer, "%s은(는) %d자리 숫자입니다.(%s)\n", funcname ? funcname : "해당 값", length, newNumber);
             ituTextBoxInput(resultTextBox, resultBuffer);
         }
         return TEST_FAILED_WRONG_LENGTH;  
@@ -146,7 +157,7 @@ const int testNumber(const char* newNumber, const int length, const int min, con
         printf("Wrong value for %s : %s\n", funcname, newNumber);
         if(resultTextBox)
         {
-            sprintf(resultBuffer, "%s의 최대 값은 %d, 최소 값은 %d입니다.(%s)\n", funcname, max, min, newNumber);
+            sprintf(resultBuffer, "%s의 최대 값은 %d, 최소 값은 %d입니다.(%s)\n", funcname ? funcname : "해당 값", max, min, newNumber);
             ituTextBoxInput(resultTextBox, resultBuffer);
         }
         return TEST_FAILED_WRONG_VALUE;
@@ -425,13 +436,13 @@ const int setMaxPower(const char* newMaxPower)
 
     if(resultTextBox)
     {
-        sprintf(resultBuffer, "최대 출력을 %d Kw로 변경했습니다.\n", newMaxPower);
+        sprintf(resultBuffer, "최대 출력을 %d Kw로 변경했습니다.\n", theConfig.maxPower);
         ituTextBoxInput(resultTextBox, resultBuffer);
     }
 
-    printf("MaxPower - Not Supported now.\n");
-    sprintf(resultBuffer, "현재 최대 출력 변경은 지원하지 않습니다.\n");
-    ituTextBoxInput(resultTextBox, resultBuffer);
+    // printf("MaxPower - Not Supported now.\n");
+    // sprintf(resultBuffer, "현재 최대 출력 변경은 지원하지 않습니다.\n");
+    // ituTextBoxInput(resultTextBox, resultBuffer);
 
     return RUN_SUCCESS;
 }
