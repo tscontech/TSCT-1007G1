@@ -79,12 +79,12 @@ size_t rebootCnt = 0;
 // Function
 //-----------------------------------------------------------------------
 
-static void* SeccRS232ReadTask(void* arg);
-
 bool checkSECC()
 {  
 	return rebootCnt == 0 && SeccInitStep == SECC_INIT_STEP_DONE;
 }
+
+static void* SeccRS232ReadTask(void* arg);
 
 /**
  * @brief Little Endian Data => Big Endian Data (16bit) 
@@ -1157,10 +1157,6 @@ void ParsRxData(void)
 			{
 				MagneticContactorOff();
 			}
-			else
-			{
-				MagneticContactorOn();
-			}
 			/*
 			if(SeccRxData.pwmvoltage >= 110 && SeccRxData.pwmvoltage <= 130)  //SADASDSADASDADADDASDASDASDASD
 				// return CP_VOLTAGE_12V;	
@@ -1362,9 +1358,11 @@ void SeccInit(void)
 	SeccTxData.status_fault = 1<<SECC_STAT_EVSE_READY;
 	SeccTxData.NormVolt = 2200;
 	// SeccTxData.MaxCurr = theConfig.chargingstatus * 45 ;	// 1000 / 220 * 10
-	SeccTxData.MaxCurr = 315 ;	// 1000 / 220 * 10
+	// SeccTxData.MaxCurr = 315 ;	// 1000 / 220 * 10
+	SeccTxData.MaxCurr = 320 ;	// 1000 / 220 * 10
 	SeccTxData.NormFreq = 60;
-	SeccTxData.MaxPower = 70;
+	// SeccTxData.MaxPower = 70;
+	SeccTxData.MaxPower = theConfig.maxPower * 10;
 	SeccTxData.payment = 0;
 
 	SeccRxData.stcode = CSM_STAT_READY;

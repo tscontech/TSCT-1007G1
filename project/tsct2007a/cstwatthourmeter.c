@@ -175,6 +175,14 @@ static bool RequestValueNew(int ch) {
 
 		return false;
 	}
+	//TODO: Check 6V and turn on again if AMI is not turn on
+	// else if(CstGetMcstatus() == true && amidata.sRS485errors > 5)
+	// {   //Retry to turn on MC
+	// 	MagneticContactorOff();
+	// 	MagneticContactorOn();
+	// 	amidata.sRS485errors = 0;
+	// 	return false;
+	// }
 
     EM2P_REQ[0] = 0;
     EM2P_REQ[1] = 3;

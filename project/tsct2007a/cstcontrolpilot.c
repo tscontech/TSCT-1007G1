@@ -116,9 +116,15 @@ static CPVoltage sCh1OldVoltage = CP_VOLTAGE_UNKNOWN;
 static CPVoltage GetVoltage(ChannelType ch){
 
 	if(SeccRxData.pwmvoltage >= 110 && SeccRxData.pwmvoltage <= 130)
+	{
+		MagneticContactorOff();
 		return CP_VOLTAGE_12V;	
+	}
 	else if(SeccRxData.pwmvoltage >= 80 && SeccRxData.pwmvoltage <= 100)
+	{
+		MagneticContactorOff();
 		return CP_VOLTAGE_9V;
+	}
 	else if(SeccRxData.pwmvoltage >= 50 && SeccRxData.pwmvoltage <= 70)
 		return CP_VOLTAGE_6V;
 	else if(SeccRxData.pwmvoltage >= 0 && SeccRxData.pwmvoltage <= 20)

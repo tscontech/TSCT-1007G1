@@ -25,9 +25,14 @@
 // MACRO
 //-----------------------------------------------------------------------
 #define UNIT_MS     33
-#define LIMIT_OV_VOLT	26400		// +20%
-#define LIMIT_UD_VOLT	19800		// -10%
-#define LIMIT_OV_CURR	3500		// +10%
+// #define LIMIT_OV_VOLT	26400		// +20%
+// #define LIMIT_UD_VOLT	19800		// -10%
+//안전인증 시 꺼짐문제 
+#define LIMIT_OV_VOLT	27000		// +20% + 6v
+#define LIMIT_UD_VOLT	19000		// -10% - 8v
+// #define LIMIT_UD_VOLT	17000		// -20% - 6v
+// #define LIMIT_OV_CURR	3500		// +10%
+// #define LIMIT_OV_CURR	3600		// 7000/198 = 35.353535...
 
 #define PRICE_LOG_PERIOD_SEC	15
 //-----------------------------------------------------------------------
@@ -586,7 +591,7 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		// Sever Connection Check
 
 		if(CstGetMcstatus() == true)  //6V + Charging
-			while(bAmiErrChk && !CstGetEpqStatus(TSCT_COM_WHM))
+			while(bAmiErrChk)
 			{	//AMI not working
 				CstSetEpqStatus(TSCT_COM_WHM, false);
 				// EventCode_buf |= 1 << EVE_AMI;
@@ -595,9 +600,12 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		else CstSetEpqStatus(TSCT_COM_WHM, true);
 
 		chk_Volt = TSCTGetAMIVolt();
-		LimitVolt_Average = (LimitVolt_Average * 4 + chk_Volt) / 5;
 		chk_Current = TSCTGetAMICurrent();
+		LimitVolt_Average = (LimitVolt_Average * 4 + chk_Volt) / 5;
 		chk_Power = ((uint32_t)LimitVolt_Average * (uint32_t)chk_Current) / 1000;
+
+		printf("[ChargeFaultMonitoringTaskFuntion] volt = %d / %d, curr = %d / %d, power = %d / %d\n", 
+				chk_Volt, LimitVolt_Average, chk_Current, limit_over_current, chk_Power, limit_over_power);
 
 		if(chk_Current > limit_over_current)	Fault_Count[0]++;	
 		else	Fault_Count[0] = 0;
@@ -611,6 +619,12 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		if(chk_Power > limit_over_power) Fault_Count[4]++;
 		else Fault_Count[4] = 0;
 
+		// Fault_Count[0] += (chk_Current > limit_over_current);	
+		// Fault_Count[1] += (chk_Volt > LIMIT_OV_VOLT);	
+		// Fault_Count[2] += (chk_Volt < LIMIT_UD_VOLT);	
+		// Fault_Count[3] += (ChargerTemperate > 80);
+		// Fault_Count[4] += (chk_Power > limit_over_power);
+
 		// if(CheckChrgPwr(chk_Current, chk_Volt, currLmtFlg)) Fault_Count[4]++;
 		// else	Fault_Count[4] = 0;
 		// if(currLmtFlg && (chk_Current > (uint16_t)((currLmtAmp+1) * 100))) Fault_Count[5]++;		// 설정 전류의 3% 초과해서 전류 가져가는 차량 존재
@@ -618,6 +632,7 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		
 		if(Fault_Count[0] > 10){ 
 			CtLogRed("Charge Over Current Fault!!!!!!!!!!!!!!!!!!!");
+			sDLsChargeFaultMonitoring = 0;
 			Fault_Count[0] = 0;
 			Fault_Count[1] = 0;
 			Fault_Count[2] = 0;
@@ -627,7 +642,8 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 			// EventCode_buf |= 1 << EVE_OVC;
 		}
 		if(Fault_Count[1] > 10){ 
-			CtLogRed("Charge Over Voltage Fault!!!!!!!!!!!!!!!!!!!");		
+			CtLogRed("Charge Over Voltage Fault!!!!!!!!!!!!!!!!!!!");	
+			sDLsChargeFaultMonitoring = 0;	
 			Fault_Count[0] = 0;
 			Fault_Count[1] = 0;
 			Fault_Count[2] = 0;
@@ -638,6 +654,7 @@ static void ChargeFaultMonitoringTaskFuntion(void *arg)
 		}
 		if(Fault_Count[2] > 10){ 
 			CtLogRed("Charge Under Voltage Fault!!!!!!!!!!!!!!!!!!!");
+			sDLsChargeFaultMonitoring = 0;
 			Fault_Count[0] = 0;
 			Fault_Count[1] = 0;
 			Fault_Count[2] = 0;

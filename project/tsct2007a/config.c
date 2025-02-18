@@ -170,6 +170,7 @@ void ConfigInit(void)
 	theConfig.FreeChargingTime = iniparser_getint(cfgIni, "basicconfig:FreeChargingTime", 0);	//
 	strncpy(theConfig.chkModeMac, iniparser_getstring(cfgIni, "basicconfig:chkModeMac", "9012A100CB12"), sizeof(theConfig.chkModeMac));
 	theConfig.targetSoc = iniparser_getint(cfgIni, "basicconfig:targetSoc", 100);	//
+	theConfig.maxPower = iniparser_getint(cfgIni, "basicconfig:maxPower", 7);	//
     
 	// Stop Transaction
 	StopTsConfig.Connector_No = iniparser_getint(cfgIni, "application:con_no", (0));
@@ -306,6 +307,7 @@ void ConfigRecoverFromBackup(void)
 	strncpy(theConfig.gpslat, DEFAULT_GPSLAT, strlen (DEFAULT_GPSLAT) + 1);
 	strncpy(theConfig.gpslon, DEFAULT_GPSLON, strlen (DEFAULT_GPSLON) + 1);
 	theConfig.chargingstatus = 2; // not used
+	theConfig.maxPower = 7;
     theConfig.lang = LANG_ENG;
 	theConfig.brightness = DEFAULT_DSIPBL;
 	theConfig.screensaver_time = DEFAULT_DISPSSTIME;	 
@@ -746,6 +748,8 @@ static void ConfigSavePublic(void)
     iniparser_set(cfgIni, "basicconfig:FreeChargingTime", buf);
 	iniparser_set(cfgIni, "basicconfig:chkModeMac", theConfig.chkModeMac);
 	iniparser_set(cfgIni, "basicconfig:targetSoc", theConfig.targetSoc);
+	iniparser_set(cfgIni, "basicconfig:maxPower", theConfig.maxPower);
+	
 
 
 	memset(buf,0x00,sizeof(buf));
@@ -990,6 +994,7 @@ void ConfigInitSave()// ctrlboard.ini의 default 값과 동일 해야한다.
 	theConfig.FreeChargingTime = 0;
 
 	theConfig.targetSoc = 100;
+	theConfig.maxPower = 7;
 	
 	sprintf(theConfig.chkModeMac,"9012A100CB12");
 
@@ -1060,6 +1065,7 @@ static char VerifyConfigSave(void)
 	strncpy(theConfig2.gpslat, iniparser_getstring(cfgIni2, "basicconfig:gpslat", DEFAULT_GPSLAT), strlen (DEFAULT_GPSLAT) + 1);
 	strncpy(theConfig2.gpslon, iniparser_getstring(cfgIni2, ":gpslon", DEFAULT_GPSLON), strlen (DEFAULT_GPSLON) + 1);
 	theConfig2.chargingstatus = iniparser_getint(cfgIni2, "basicconfig:chargingstatus", 2); // not used
+	theConfig2.maxPower = iniparser_getint(cfgIni2, "basicconfig:maxPower", 7);
 	
 	// [tcpip] - network
 	theConfig2.dhcp = iniparser_getint(cfgIni, "tcpip:dhcp", (1));
@@ -1116,6 +1122,12 @@ static char VerifyConfigSave(void)
 	if ( theConfig2.ConfirmSelect != theConfig.ConfirmSelect )    
 	{
 	    printf("different ConfirmSelect  %d, %d\n", theConfig.ConfirmSelect, theConfig2.ConfirmSelect);
+       ret = 1;
+    }
+
+	if ( theConfig2.maxPower != theConfig.maxPower )    
+	{
+	    printf("different maxPower  %d, %d\n", theConfig.maxPower, theConfig2.maxPower);
        ret = 1;
     }
 
@@ -1210,6 +1222,7 @@ static char DumpConfigSave(void)
 	printf("configcheck  : %s\n", theConfig.configcheck);
 	printf("timeinit   : %s\n", theConfig.timeinit);
 	printf("ConfirmSelect :  %d\n", theConfig.ConfirmSelect);
+	printf("maxPower :  %d\n", theConfig.maxPower);
 	
 	printf("authkey  : %s\n", theConfig.authkey);
 
