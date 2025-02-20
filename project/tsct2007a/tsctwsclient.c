@@ -676,7 +676,7 @@ bool Tsct_Curl_Ws_Recv(void)
 	}
 	
 	// for Before Receive BootNotification Response
-	if(GetCpStatus(0) == CP_STATUS_CODE_NONE){
+	if(GetCpStatus(0) <= CP_STATUS_CODE_PEND){
 		// Call Response Data Proc
 		if((Rx_Msg.Msg_type == 3) && (Rx_Msg.Action_Code == CP_REQ_ACTION_CODE_BOOT))
 		{
@@ -685,8 +685,17 @@ bool Tsct_Curl_Ws_Recv(void)
 				Rx_CallRes_DataProc(Rx_Msg.Action_Code);
 			}
 		}
-		else if((Rx_Msg.Msg_type == 2) && (Rx_Msg.Action_Code == CS_REQ_ACTION_CODE_DATATRANSFER)) {
-			Rx_Call_DataProc(CS_REQ_ACTION_CODE_DATATRANSFER);
+		else if((Rx_Msg.Msg_type == 2) )
+		{
+			if(Rx_Msg.Action_Code == CS_REQ_ACTION_CODE_DATATRANSFER) {
+				ret = Rx_Call_DataProc(CS_REQ_ACTION_CODE_DATATRANSFER);
+			}
+			else if(Rx_Msg.Action_Code == CS_REQ_ACTION_CODE_GETCONFIG) {
+				ret = Rx_Call_DataProc(CS_REQ_ACTION_CODE_GETCONFIG);
+			}
+
+			if(ret)	printf("Non Defined Action Command %d\r\n", Rx_Msg.Action_Code);
+			else	Tsct_Curl_Ws_Trans();
 		}
 	}
 	else{

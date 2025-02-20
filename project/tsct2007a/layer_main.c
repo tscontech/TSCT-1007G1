@@ -267,7 +267,7 @@ bool MainOnEnter(ITUWidget* widget, char* param)
 
 	memset(CsConfigVal.parentId, '\0', sizeof(CsConfigVal.parentId));
 
-	if((GetCpStatus(0) != CP_STATUS_CODE_NONE) && (GetCpStatus(0) != CP_STATUS_CODE_UNAVAIL)){
+	if((GetCpStatus(0) > CP_STATUS_CODE_PEND) && (GetCpStatus(0) != CP_STATUS_CODE_UNAVAIL)){
 		for(int i=0;i<=MAX_CONECTOR_ID;i++)
 		{
 			if(i > 0)

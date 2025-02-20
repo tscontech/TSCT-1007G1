@@ -53,7 +53,7 @@
 
 #define EvntQMaxLen				4
 
-#define MAX_CONECTOR_ID			1
+#define MAX_CONECTOR_ID			1 //0 for CP, ALL CONNECTORS. Individual connector's number is start from 1.
 
 #define MAX_CFG 22
 
@@ -291,19 +291,20 @@ typedef struct {
 	uint32_t CfgKeyDataInt
 }TSCT_CFG_KEY;
 
-// 	1	"AuthorizeRemoteTxRequests",
-// 	2	"ClockAlignedDataInterval",
-// 	3	"ConnectionTimeOut",
-// 	4	"ConnectorPhaseRotation",
-// 	5	"GetConfigurationMaxKeys",
-// 	6	"HeartbeatInterval",
-// 	7	"LocalAuthorizeOffline",
-// 	8	"LocalPreAuthorize",
-// 	9	"MeterValuesAlignedData",
-// 	10	"MeterValuesSampledData",
-// 	11	"MeterValueSampleInterval",
-// 	12	"NumberOfConnectors",
-// 	13	"ResetRetries",
+// 	0	"AuthorizeRemoteTxRequests",
+// 	1	"ClockAlignedDataInterval",
+// 	2	"ConnectionTimeOut",
+// 	3	"ConnectorPhaseRotation",
+// 	4	"GetConfigurationMaxKeys",
+// 	5	"HeartbeatInterval",
+// 	6	"LocalAuthorizeOffline",
+// 	7	"LocalPreAuthorize",
+// 	8	"MeterValuesAlignedData",
+// 	9	"MeterValuesSampledData",
+// 	10	"MeterValueSampleInterval",
+// 	11	"NumberOfConnectors",
+// 	12	"ResetRetries",
+//  13  "StopTransactionOnEVSideDisconnect"
 // 	14	"StopTransactionOnInvalidId",
 // 	15	"StopTxnAlignedData",
 // 	16	"StopTxnSampledData",
@@ -311,6 +312,7 @@ typedef struct {
 // 	18	"TransactionMessageAttempts",
 // 	19	"TransactionMessageRetryInterval",
 // 	20	"UnlockConnectorOnEVSideDisconnect",
+//  21  "AllowOfflineTxForUnknownId",
 
 // Notyet Use
 // 	21	"LocalAuthListEnabled",
