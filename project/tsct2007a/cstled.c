@@ -56,10 +56,19 @@ static void* ChBlinkTask(void* arg)
 	{
 		if(sBlinkRunning)
 		{
-			if (sLedOn) 	LEDOff();
-			else			LEDOn();
+			if (sLedOn) 	
+			{   //Off
+				LEDOff();
+				sleep(60);
+			}
+			else			
+			{   //On
+				LEDOn();
+				sleep(1);
+			}
 		}
-		sleep(1);
+		else  //Prevent to kill thread
+			sleep(1);
 	}
 
 	CtLogYellow("[LED#0] exit blink thread..\n");

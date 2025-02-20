@@ -723,7 +723,7 @@ static void StartCharge(void)
 	// ituSpritePlay(sChargeSprite, CH1);	
 	// sChargeSpritePlaybool = true;
 	
-	// LEDStartBlink();
+	LEDStartBlink();
 	MagneticContactorOn();
 	usleep(3000*1000);
 	sCharging = true;	
@@ -915,6 +915,7 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 					{
 						chargecomp_stop = false;
 						MagneticContactorOn();
+						StartCharge();
 						StartStopCharging(0, ch);
 						SetStopChargingTimer(false);
 					}
