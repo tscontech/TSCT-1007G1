@@ -1114,7 +1114,7 @@ void MakeDataCmd_StopTs(void)
 	Tx_Msg.Payload[Tx_Msg.Payload_len].data_type = TYPE_CODE_STR;
 	Tx_Msg.Payload_len++;
 
-	CsConfigVal.bReqRmtStopTSFlg = false;
+	// CsConfigVal.bReqRmtStopTSFlg = false;
 }
 
 void DataProcCmd_StopTs(void)

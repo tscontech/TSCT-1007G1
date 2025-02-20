@@ -540,6 +540,13 @@ static void* sChargeMonitoringTaskFuntion(void* arg)
 			TSCT_ChargingStop();
 		}
 		#endif
+
+		if(CsConfigVal.bReqRmtStopTSFlg)
+		{	//Server requested stop
+			CtLogYellow("Charge Stop by Server Request");
+			CsConfigVal.bReqRmtStopTSFlg = false;
+			TSCT_ChargingStop();
+		}
 			
 	}
 	sChargeMonitoringTask = 0;
@@ -811,7 +818,7 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 
 		case CP_VOLTAGE_12V:
 			// if(CsConfigVal.StopTransactionOnEVSideDisconnect){
-			if(CfgKeyVal[13].CfgKeyDataInt){
+			if(CfgKeyVal[13].CfgKeyDataInt){  //Stop Tx when EV side disconnect
 				ScreenOnScenario();
 				chargecomp_stop = false;			
 				shmDataAppInfo.app_order = APP_ORDER_CHARGING_STOP;
@@ -824,16 +831,12 @@ static void CPListenerOnCharge(int ch, unsigned char nAdcValue, CPVoltage voltag
 				// }
 				GotoNextLayerOnCharge();
 			}
-			else{
-				// if (sCharging){ 	
-					if(CstGetMcstatus()){	
-						MagneticContactorOff();	
-						// StartStopCharging(1, ch);
-						SetStopChargingTimer(true);
-						chargecomp_stop = true;
-						SetCpStatus(CP_STATUS_CODE_SUSPENDEDEV,bDevChannel+1);
-					}
-				// }
+			else{  //Suspend Tx when EV side disconnected
+				MagneticContactorOff();	
+				// StartStopCharging(1, ch);
+				SetStopChargingTimer(true);
+				chargecomp_stop = true;
+				SetCpStatus(CP_STATUS_CODE_SUSPENDEDEV,bDevChannel+1);
 			}
 			break;
 			

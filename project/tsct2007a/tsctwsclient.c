@@ -1540,27 +1540,27 @@ void Init_CfgKey(void)
 	CfgKeyVal[15].CfgKeyType = TYPE_CODE_STR;
 	sprintf(CfgKeyVal[15].CfgKeyDataCha, "Energy.Active.Import.Register");
 
-	// memcpy(CfgKeyVal[15].CfgKeyName, "StopTxnSampledData", sizeof("StopTxnSampledData"));
+	// memcpy(CfgKeyVal[16].CfgKeyName, "StopTxnSampledData", sizeof("StopTxnSampledData"));
 	CfgKeyVal[16].CfgKeyRw = false;
 	CfgKeyVal[16].CfgKeyType = TYPE_CODE_STR;
 	sprintf(CfgKeyVal[16].CfgKeyDataCha, "Energy.Active.Import.Register");
 
-	// memcpy(CfgKeyVal[16].CfgKeyName, "SupportedFeatureProfiles", sizeof("SupportedFeatureProfiles"));
+	// memcpy(CfgKeyVal[17].CfgKeyName, "SupportedFeatureProfiles", sizeof("SupportedFeatureProfiles"));
 	CfgKeyVal[17].CfgKeyRw = true;
 	CfgKeyVal[17].CfgKeyType = TYPE_CODE_STR;
 	sprintf(CfgKeyVal[17].CfgKeyDataCha, "Core, FirmwareManagement, RemoteTrigger");
 
-	// memcpy(CfgKeyVal[17].CfgKeyName, "TransactionMessageAttempts", sizeof("TransactionMessageAttempts"));
+	// memcpy(CfgKeyVal[18].CfgKeyName, "TransactionMessageAttempts", sizeof("TransactionMessageAttempts"));
 	CfgKeyVal[18].CfgKeyRw = false;
 	CfgKeyVal[18].CfgKeyType = TYPE_CODE_INT;
 	CfgKeyVal[18].CfgKeyDataInt = 5;
 
-	// memcpy(CfgKeyVal[18].CfgKeyName, "TransactionMessageRetryInterval", sizeof("TransactionMessageRetryInterval"));
+	// memcpy(CfgKeyVal[19].CfgKeyName, "TransactionMessageRetryInterval", sizeof("TransactionMessageRetryInterval"));
 	CfgKeyVal[19].CfgKeyRw = false;
 	CfgKeyVal[19].CfgKeyType = TYPE_CODE_INT;
 	CfgKeyVal[19].CfgKeyDataInt = 10;		
 
-	// memcpy(CfgKeyVal[19].CfgKeyName, "UnlockConnectorOnEVSideDisconnect", sizeof("UnlockConnectorOnEVSideDisconnect"));
+	// memcpy(CfgKeyVal[20].CfgKeyName, "UnlockConnectorOnEVSideDisconnect", sizeof("UnlockConnectorOnEVSideDisconnect"));
 	CfgKeyVal[20].CfgKeyRw = false;
 	CfgKeyVal[20].CfgKeyType = TYPE_CODE_BOOL;
 	CfgKeyVal[20].CfgKeyDataInt = true;		
